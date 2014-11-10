@@ -1,19 +1,19 @@
 {
-    "name": "GeekyMenuCloudApp",
-    "version": "0.0.1",
-    "dependencies": {
-        "express": "~4.10.1",
-        "mongoose": "~3.8.18",
-        "ejs": "~1.0.0",
-        "bcrypt-nodejs": "0.0.3",
-        "body-parser": "~1.9.2",
-        "socket.io": "~1.2.0"
-    },
-    "devDependencies": {},
-    "engines": {
-        "node": ">=0.10.0"
-    },
-    "scripts": {
-        "start": "node index.js"
-    }
+  "name": "GeekyMenuCloudApp",
+  "version": "0.0.1",
+  "dependencies": {
+    "express": "~4.10.1",
+    "mongoose": "~3.8.19",
+    "ejs": "~1.0.0",
+    "bcrypt-nodejs": "0.0.3",
+    "body-parser": "~1.9.2",
+    "socket.io": "~1.2.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
 }
