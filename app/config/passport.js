@@ -10,7 +10,7 @@ var FacebookStrategy = require('passport-facebook').Strategy;
 var configAuth = require('./auth.local'); // use this one for testing
 
 // load up the user model
-//var User = require('../models/schema').Users;
+var User = require('../models/schemas').User;
 //var Customer = require('../models/mongo').Customer;
 
 // expose this function to our app using module.exports
@@ -187,9 +187,11 @@ module.exports = function (passport) {
                 // check if the user is already logged in
                 if (!req.user) {
                     User.findOne({'facebook.id': profile.id}, function (err, user) {
+                        console.log("error", err);
                         if (err)
                             return done(err);
                         if (user) {
+                            console.log("hasuser");
                             // if there is a user id already but no token (user was linked at one point and then removed)
                             if (!user.facebook.token) {
                                 user.facebook.token = token;
@@ -198,9 +200,12 @@ module.exports = function (passport) {
                                 user.save(function (err) {
                                     if (err)
                                         throw err;
+
+                                    console.log('user done');
                                     return done(null, user);
                                 });
                             }
+                            console.log('user done');
                             return done(null, user); // user found, return that user
                         } else {
                             // if there is no user, create them

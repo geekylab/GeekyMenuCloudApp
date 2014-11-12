@@ -1,0 +1,3 @@
+[submodule "app/GeekyOSEasyControl"]
+	path = app/GeekyOSEasyControl
+	url = git@github.com:geekylab/GeekyOSEasyControl.git

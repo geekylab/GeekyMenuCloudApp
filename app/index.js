@@ -7,20 +7,48 @@ var flash = require('connect-flash');
 var expressSession = require('express-session');
 var cacheManifest = require('connect-cache-manifest');
 var path = require('path');
-require('./config/passport')(passport);
+var methodOverride = require('method-override');
 var app = express();
+require('./config/passport')(passport);
 
 
 //app settings
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'GeekyOSEasyControl/app'));
+//cache
+app.use(cacheManifest({
+    manifestPath: '/app/application.manifest',
+    files: [{
+        dir: __dirname + '/GeekyOSEasyControl/app/',
+        prefix: '/app/',
+        ignore: function (x) {
+            return /\.scss$|\.buildignore$/.test(x);
+        }
+    }
+        //    , {
+        //    dir: __dirname + '/views',
+        //    prefix: '/app/views/',
+        //    ignore: function (x) {
+        //        return /\.bak$/.test(x);
+        //    },
+        //    replace: function (x) {
+        //        return x.replace(/\.ejs/, '.html');
+        //    }
+        //}
+    ],
+    networks: ['*'],
+    fallbacks: ['/app']
+}));
+
+
+app.use(methodOverride());
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({extended: false, limit: '50mb'}));
 app.use(cookieParser());
-app.set('view engine', 'ejs');
 
 // required for passport
 app.use(expressSession({
         secret: 'lfsjdlfkjsdlfjsldkjfsblablablabla',
-        proxy: true,
         resave: true,
         saveUninitialized: true
     })
@@ -28,41 +56,38 @@ app.use(expressSession({
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
-app.set('views', path.join(__dirname, 'views'));
 
-//cache
-app.use(cacheManifest({
-    manifestPath: '/application.manifest',
-    files: [{
-        dir: __dirname + '/public/js/',
-        prefix: '/app/js/'
-    }, {
-        dir: __dirname + '/public/css',
-        prefix: '/app/css/'
-    }, {
-        dir: __dirname + '/views',
-        prefix: '/app/',
-        ignore: function (x) {
-            return /\.bak$/.test(x);
-        },
-        replace: function (x) {
-            return x.replace(/\.ejs/, '');
-        }
-    }],
-    networks: ['*'],
-    fallbacks: ['/app']
-}));
 
+require('./routes/auth')(app, passport, isLoggedIn);
+app.use('/app', express.static(path.join(__dirname, '/GeekyOSEasyControl/app')));
+require('./routes/app-core')(app, passport, isLoggedIn);
 
 //open api
-require('./routes/open-api')(app, passport);
+require('./routes/open-api')(app, passport, isLoggedIn);
 
 //store sync
-require('./routes/store-sync')(app);
+require('./routes/store-sync')(app, passport, isLoggedIn);
 
-//app core
-app.use('/app', express.static(path.join(__dirname, '/public')));
-require('./routes/app-core')(app);
 
+// catch 404 and forward to error handler
+//app.use(function (req, res, next) {
+//    var err = new Error('Not Found');
+//    err.status = 404;
+//    next(err);
+//});
+
+function isLoggedIn(req, res, next) {
+    if (req.isAuthenticated())
+        return next();
+    res.status(401).json({error: 'not auth'});
+}
+
+//app.use(function (err, req, res, next) {
+//    res.status(err.status || 500);
+//    res.render('error', {
+//        message: err.message,
+//        error: err
+//    });
+//});
 
 module.exports = app;

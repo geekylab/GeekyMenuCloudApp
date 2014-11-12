@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var bcrypt = require('bcrypt-nodejs');
 
-var db = mongoose.connect('mongodb://localhost/geekyMenuCloud');
+var db = mongoose.connect('mongodb://GEEKY_MONGO/geekyMenuCloud');
 
 var Store = new mongoose.Schema({
     'store_name': {
@@ -76,4 +76,41 @@ var Store = new mongoose.Schema({
 
 Store.index({location: "2dsphere"});
 
+var User = mongoose.Schema({
+    local: {
+        username: String,
+        password: String
+    },
+    facebook: {
+        id: String,
+        token: String,
+        email: String,
+        name: String
+    },
+    twitter: {
+        id: String,
+        token: String,
+        displayName: String,
+        username: String
+    },
+    google: {
+        id: String,
+        token: String,
+        email: String,
+        name: String
+    }
+});
+
+// methods ======================
+// generating a hash
+User.methods.generateHash = function (password) {
+    return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
+};
+
+// checking if password is valid
+User.methods.validPassword = function (password) {
+    return bcrypt.compareSync(password, this.local.password);
+};
+
 exports.Store = db.model('Store', Store);
+exports.User = db.model('User', User);
