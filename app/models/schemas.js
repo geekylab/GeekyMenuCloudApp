@@ -101,6 +101,17 @@ var User = mongoose.Schema({
     }
 });
 
+var Category = new mongoose.Schema({
+    name: {
+        type: mongoose.Schema.Types.Mixed,
+        index: true
+    },
+    created: {
+        type: Date,
+        default: Date.now
+    }
+});
+
 // methods ======================
 // generating a hash
 User.methods.generateHash = function (password) {
@@ -114,3 +125,4 @@ User.methods.validPassword = function (password) {
 
 exports.Store = db.model('Store', Store);
 exports.User = db.model('User', User);
+exports.Category = db.model('Category', Category);

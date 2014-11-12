@@ -22,7 +22,33 @@ app.use(cacheManifest({
         dir: __dirname + '/GeekyOSEasyControl/app/',
         prefix: '/app/',
         ignore: function (x) {
-            return /\.scss$|\.buildignore$/.test(x);
+
+            if (/\.bower.*|bower\.json|package\.json|\.csscomb\.json/.test(x)) {
+                return true;
+            }
+
+            //if (/views\/templates/.test(x)) {
+            //    return false;
+            //}
+
+            if (/\.js$|\.ejs$|\.css$|\.json$/.test(x)) {
+                return false;
+            }
+
+            //fonts
+            if (/\.otf$|\.svg$|\.ttf$|\.woff$/.test(x)) {
+                return false;
+            }
+
+            //images
+            if (/\.jpe?g$|\.git$|\.png$/.test(x)) {
+                return false;
+            }
+            console.log(x);
+            return true;
+        },
+        replace: function (x) {
+            return x.replace(/\.ejs/, '');
         }
     }
         //    , {
@@ -54,7 +80,11 @@ app.use(expressSession({
     })
 ); // session secret
 app.use(passport.initialize());
-app.use(passport.session());
+app.use(passport.session({
+    cookie: {
+        maxAge: 3600000
+    }
+}));
 app.use(flash());
 
 
