@@ -13,8 +13,10 @@ module.exports = function (app, passport) {
 
 
     app.get('/auth/facebook/callback',
-        passport.authenticate('facebook', { failureRedirect: '/app/login' }),
-        function(req, res) {
-            res.redirect('/app/index');
+        passport.authenticate('facebook', {failureRedirect: '/app/login'}),
+        function (req, res) {
+            var user = req.user;
+            console.log(user);
+            res.redirect('http://127.0.0.1:3000/login/' + user._id);
         });
 };
