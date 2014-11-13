@@ -35,7 +35,6 @@ module.exports = function (app, passport, isLoggedIn) {
 
 
     //api
-
     app.get('/api/dashboard/index', isLoggedIn, function (req, res) {
         Tables.count({table_status: 1}, function (err, count) {
             if (err) {
