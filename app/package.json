@@ -15,7 +15,9 @@
     "express-session": "~1.9.1",
     "passport-facebook": "~1.0.3",
     "connect-cache-manifest": "~0.2.0",
-    "method-override": "~2.3.0"
+    "method-override": "~2.3.0",
+    "passport.socketio": "~3.4.1",
+    "connect-mongo": "~0.4.1"
   },
   "devDependencies": {},
   "engines": {

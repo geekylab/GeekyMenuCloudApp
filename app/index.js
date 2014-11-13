@@ -1,15 +1,58 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
-var mongoose = require('mongoose');
 var passport = require('passport');
 var flash = require('connect-flash');
 var expressSession = require('express-session');
+var MongoStore = require('connect-mongo')(expressSession);
+var mongoose = require('mongoose');
 var cacheManifest = require('connect-cache-manifest');
 var path = require('path');
 var methodOverride = require('method-override');
+var passportSocketIo = require("passport.socketio");
+var EventEmitter = require('events').EventEmitter;
+var appEvent = new EventEmitter();
 var app = express();
 require('./config/passport')(passport);
+
+
+// required for passport
+var myMongoStore = new MongoStore({
+    db: mongoose.connection.db
+});
+
+app.set('port', process.env.LISTEN_PORT || 80);
+var server = app.listen(app.get('port'), function () {
+    console.log('Express server listening on port ' + server.address().port);
+});
+var io = require('socket.io').listen(server);
+app.set('io', io);
+
+var notices = [];
+io.sockets.on('connection', function (socket) {
+    if (socket.request.user) {
+        console.log("connection!!!!!");
+        if (socket.request.user.facebook) {
+            console.log("connection11", socket.request.user.facebook.name);
+
+
+            appEvent.on('sendNotice:' + socket.request.user._id, function (data) {
+                socket.emit('notice', data);
+            });
+        }
+
+
+        socket.on('disconnect', function () {
+            if (socket.request.user.facebook) {
+                var eventName = 'sendNotice:' + socket.request.user._id;
+                appEvent.removeListener(eventName, function () {
+                });
+                console.log('disconnect11: ', socket.request.user.facebook.name);
+            }
+        });
+
+    }
+});
 
 
 //app settings
@@ -44,7 +87,6 @@ app.use(cacheManifest({
             if (/\.jpe?g$|\.git$|\.png$/.test(x)) {
                 return false;
             }
-            console.log(x);
             return true;
         },
         replace: function (x) {
@@ -66,26 +108,63 @@ app.use(cacheManifest({
     fallbacks: []
 }));
 
-
 app.use(methodOverride());
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({extended: false, limit: '50mb'}));
 app.use(cookieParser());
 
-// required for passport
 app.use(expressSession({
         secret: 'lfsjdlfkjsdlfjsldkjfsblablablabla',
         resave: true,
-        saveUninitialized: true
+        saveUninitialized: true,
+        store: myMongoStore
     })
 ); // session secret
 app.use(passport.initialize());
-app.use(passport.session({
-    cookie: {
-        maxAge: 3600000
-    }
-}));
+app.use(passport.session());
 app.use(flash());
+
+
+//socket io
+io.use(passportSocketIo.authorize({
+    cookieParser: cookieParser,
+//    key: 'express.sid',       // the name of the cookie where express/connect stores its session_id
+    secret: 'lfsjdlfkjsdlfjsldkjfsblablablabla',    // the session_secret to parse the cookie
+    store: myMongoStore,        // we NEED to use a sessionstore. no memorystore please
+    success: onAuthorizeSuccess,  // *optional* callback on success - read more below
+    fail: onAuthorizeFail      // *optional* callback on fail/error - read more below
+}));
+
+function onAuthorizeSuccess(data, accept) {
+    console.log('successful connection to socket.io');
+
+    // The accept-callback still allows us to decide whether to
+    // accept the connection or not.
+    accept(null, true);
+
+    // OR
+
+    // If you use socket.io@1.X the callback looks different
+    accept();
+}
+
+function onAuthorizeFail(data, message, error, accept) {
+    if (error)
+        throw new Error(message);
+    console.log('failed connection to socket.io:', message);
+
+    // We use this callback to log all of our failed connections.
+    accept(null, false);
+
+    // OR
+
+    // If you use socket.io@1.X the callback looks different
+    // If you don't want to accept the connection
+    if (error)
+        accept(new Error(message));
+    // this error will be sent to the user as a special error-package
+    // see: http://socket.io/docs/client-api/#socket > error-object
+}
 
 
 require('./routes/auth')(app, passport, isLoggedIn);
@@ -96,7 +175,7 @@ require('./routes/app-core')(app, passport, isLoggedIn);
 require('./routes/open-api')(app, passport, isLoggedIn);
 
 //store sync
-require('./routes/store-sync')(app, passport, isLoggedIn);
+require('./routes/store-sync')(app, passport, appEvent, isLoggedIn);
 
 
 // catch 404 and forward to error handler
@@ -120,4 +199,4 @@ function isLoggedIn(req, res, next) {
 //    });
 //});
 
-module.exports = app;
+//module.exports = app;

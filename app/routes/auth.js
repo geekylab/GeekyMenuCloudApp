@@ -16,7 +16,8 @@ module.exports = function (app, passport) {
         passport.authenticate('facebook', {failureRedirect: '/app/login'}),
         function (req, res) {
             var user = req.user;
-            console.log(user);
+
+            //redirect to local login
             res.redirect('http://127.0.0.1:3000/login/' + user._id);
         });
 };
