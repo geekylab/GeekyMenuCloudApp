@@ -63,7 +63,7 @@ app.use(cacheManifest({
         //}
     ],
     networks: ['*'],
-    fallbacks: ['/app']
+    fallbacks: []
 }));
 
 
