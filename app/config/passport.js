@@ -187,25 +187,27 @@ module.exports = function (passport) {
                 // check if the user is already logged in
                 if (!req.user) {
                     User.findOne({'facebook.id': profile.id}, function (err, user) {
-                        console.log("error", err);
                         if (err)
                             return done(err);
                         if (user) {
-                            console.log("hasuser");
+                            console.log('if 1');
                             // if there is a user id already but no token (user was linked at one point and then removed)
-                            if (!user.facebook.token) {
+                            if (!user.facebook.token || !user.serverHash) {
+                                console.log('if 2');
                                 user.facebook.token = token;
                                 user.facebook.name = profile.name.givenName + ' ' + profile.name.familyName;
                                 user.facebook.email = profile.emails[0].value;
+
+                                user.serverHash = user.generateServerHash(token);
                                 user.save(function (err) {
                                     if (err)
                                         throw err;
 
-                                    console.log('user done');
+                                    console.log('done 1');
                                     return done(null, user);
                                 });
                             }
-                            console.log('user done');
+                            console.log('done 2');
                             return done(null, user); // user found, return that user
                         } else {
                             // if there is no user, create them
@@ -214,6 +216,7 @@ module.exports = function (passport) {
                             newUser.facebook.token = token;
                             newUser.facebook.name = profile.name.givenName + ' ' + profile.name.familyName;
                             newUser.facebook.email = profile.emails[0].value;
+                            user.serverHash = user.generateServerHash(token);
                             newUser.save(function (err) {
                                 if (err)
                                     throw err;
@@ -222,12 +225,16 @@ module.exports = function (passport) {
                         }
                     });
                 } else {
+                    console.log('else');
                     // user already exists and is logged in, we have to link accounts
                     var user = req.user; // pull the user out of the session
                     user.facebook.id = profile.id;
                     user.facebook.token = token;
                     user.facebook.name = profile.name.givenName + ' ' + profile.name.familyName;
                     user.facebook.email = profile.emails[0].value;
+                    if (!user.serverHash) {
+                        user.serverHash = user.generateServerHash(token);
+                    }
                     user.save(function (err) {
                         if (err)
                             throw err;

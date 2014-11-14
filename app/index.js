@@ -6,7 +6,7 @@ var flash = require('connect-flash');
 var expressSession = require('express-session');
 var MongoStore = require('connect-mongo')(expressSession);
 var mongoose = require('mongoose');
-var cacheManifest = require('connect-cache-manifest');
+//var cacheManifest = require('connect-cache-manifest');
 var path = require('path');
 var methodOverride = require('method-override');
 var passportSocketIo = require("passport.socketio");
@@ -59,55 +59,56 @@ io.sockets.on('connection', function (socket) {
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'GeekyOSEasyControl/app'));
 //cache
-app.use(cacheManifest({
-    manifestPath: '/app/application.manifest',
-    files: [{
-        dir: __dirname + '/GeekyOSEasyControl/app/',
-        prefix: '/app/',
-        ignore: function (x) {
+/*
+ app.use(cacheManifest({
+ manifestPath: '/app/application.manifest',
+ files: [{
+ dir: __dirname + '/GeekyOSEasyControl/app/',
+ prefix: '/app/',
+ ignore: function (x) {
 
-            if (/\.bower.*|bower\.json|package\.json|\.csscomb\.json/.test(x)) {
-                return true;
-            }
+ if (/\.bower.*|bower\.json|package\.json|\.csscomb\.json/.test(x)) {
+ return true;
+ }
 
-            //if (/views\/templates/.test(x)) {
-            //    return false;
-            //}
+ //if (/views\/templates/.test(x)) {
+ //    return false;
+ //}
 
-            if (/\.js$|\.ejs$|\.css$|\.json$/.test(x)) {
-                return false;
-            }
+ if (/\.js$|\.ejs$|\.css$|\.json$/.test(x)) {
+ return false;
+ }
 
-            //fonts
-            if (/\.otf$|\.svg$|\.ttf$|\.woff$/.test(x)) {
-                return false;
-            }
+ //fonts
+ if (/\.otf$|\.svg$|\.ttf$|\.woff$/.test(x)) {
+ return false;
+ }
 
-            //images
-            if (/\.jpe?g$|\.git$|\.png$/.test(x)) {
-                return false;
-            }
-            return true;
-        },
-        replace: function (x) {
-            return x.replace(/\.ejs/, '');
-        }
-    }
-        //    , {
-        //    dir: __dirname + '/views',
-        //    prefix: '/app/views/',
-        //    ignore: function (x) {
-        //        return /\.bak$/.test(x);
-        //    },
-        //    replace: function (x) {
-        //        return x.replace(/\.ejs/, '.html');
-        //    }
-        //}
-    ],
-    networks: ['*'],
-    fallbacks: []
-}));
-
+ //images
+ if (/\.jpe?g$|\.git$|\.png$/.test(x)) {
+ return false;
+ }
+ return true;
+ },
+ replace: function (x) {
+ return x.replace(/\.ejs/, '');
+ }
+ }
+ //    , {
+ //    dir: __dirname + '/views',
+ //    prefix: '/app/views/',
+ //    ignore: function (x) {
+ //        return /\.bak$/.test(x);
+ //    },
+ //    replace: function (x) {
+ //        return x.replace(/\.ejs/, '.html');
+ //    }
+ //}
+ ],
+ networks: ['*'],
+ fallbacks: []
+ }));
+ */
 app.use(methodOverride());
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({extended: false, limit: '50mb'}));
@@ -117,6 +118,7 @@ app.use(expressSession({
         secret: 'lfsjdlfkjsdlfjsldkjfsblablablabla',
         resave: true,
         saveUninitialized: true,
+//        cookie: {},
         store: myMongoStore
     })
 ); // session secret
@@ -138,32 +140,41 @@ io.use(passportSocketIo.authorize({
 function onAuthorizeSuccess(data, accept) {
     console.log('successful connection to socket.io');
 
-    // The accept-callback still allows us to decide whether to
-    // accept the connection or not.
-    accept(null, true);
-
-    // OR
-
-    // If you use socket.io@1.X the callback looks different
+    //// The accept-callback still allows us to decide whether to
+    //// accept the connection or not.
+    //accept(null, true);
+    //
+    //// OR
+    //
+    //// If you use socket.io@1.X the callback looks different
     accept();
 }
+
+// load up the user model
+var User = require('./models/schemas').User;
 
 function onAuthorizeFail(data, message, error, accept) {
     if (error)
         throw new Error(message);
-    console.log('failed connection to socket.io:', message);
 
-    // We use this callback to log all of our failed connections.
-    accept(null, false);
-
-    // OR
-
-    // If you use socket.io@1.X the callback looks different
-    // If you don't want to accept the connection
-    if (error)
-        accept(new Error(message));
-    // this error will be sent to the user as a special error-package
-    // see: http://socket.io/docs/client-api/#socket > error-object
+    if (data._query.hash) {
+        User.findOne({serverHash: data._query.hash}, function (err, user) {
+            if (!user) {
+                console.log("not user", data._query.hash);
+                accept(new Error("err"));
+            } else {
+                data['user'] = user;
+                data['user'].logged_in = true;
+                accept();
+            }
+        });
+    } else {
+        console.log('failed connection to socket.io:', message);
+        if (error)
+            accept(new Error(message));
+        // this error will be sent to the user as a special error-package
+        // see: http://socket.io/docs/client-api/#socket > error-object
+    }
 }
 
 
@@ -178,12 +189,12 @@ require('./routes/open-api')(app, passport, isLoggedIn);
 require('./routes/store-sync')(app, passport, appEvent, isLoggedIn);
 
 
-// catch 404 and forward to error handler
-//app.use(function (req, res, next) {
-//    var err = new Error('Not Found');
-//    err.status = 404;
-//    next(err);
-//});
+//catch 404 and forward to error handler
+app.use(function (req, res, next) {
+    var err = new Error('Not Found');
+    err.status = 404;
+    next(err);
+});
 
 function isLoggedIn(req, res, next) {
     if (req.isAuthenticated())

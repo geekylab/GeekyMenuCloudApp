@@ -22,15 +22,33 @@ module.exports = function (app, passport, isLoggedIn) {
     });
 
     app.get('/app/:name', function (req, res) {
-        res.render(req.params.name + '.ejs');
+        res.render(req.params.name + '.ejs', {}, function (err, html) {
+            if (err) {
+                res.status(404).end(err);
+            } else {
+                res.end(html);
+            }
+        });
     });
 
     app.get('/app/views/:name', function (req, res) {
-        res.render('views/' + req.params.name + '.ejs');
+        res.render('views/' + req.params.name + '.ejs', {}, function (err, html) {
+            if (err) {
+                res.status(404).end(err);
+            } else {
+                res.end(html);
+            }
+        });
     });
 
     app.get('/app/views/templates/:name', function (req, res) {
-        res.render('views/templates/' + req.params.name + '.ejs');
+        res.render('views/templates/' + req.params.name + '.ejs', {}, function (err, html) {
+            if (err) {
+                res.status(404).end(err);
+            } else {
+                res.end(html);
+            }
+        });
     });
 
 

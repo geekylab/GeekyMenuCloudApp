@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
 var bcrypt = require('bcrypt-nodejs');
+var crypto = require('crypto');
 
 var db = mongoose.connect('mongodb://GEEKY_MONGO/geekyMenuCloud');
 
@@ -77,6 +78,9 @@ var Store = new mongoose.Schema({
 Store.index({location: "2dsphere"});
 
 var User = mongoose.Schema({
+    serverHash: {
+        type: String
+    },
     local: {
         username: String,
         password: String
@@ -116,6 +120,10 @@ var Category = new mongoose.Schema({
 // generating a hash
 User.methods.generateHash = function (password) {
     return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
+};
+
+User.methods.generateServerHash = function (token) {
+    return crypto.createHmac('sha1', 'fkjdsalfkjsdlfj;askjfj;lkeoiarewiorjiejfskdaljfJ#$IJ#E)~#EWUD').update(token).digest('hex');
 };
 
 // checking if password is valid
