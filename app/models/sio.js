@@ -21,7 +21,11 @@ function sio(server) {
 
         // 切断
         socket.on("disconnect", function () {
+
         });
+
+
+
     });
 
     return sio;

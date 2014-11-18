@@ -55,17 +55,30 @@ module.exports = function (app, passport) {
         })(req, res, next);
     });
 
-    // facebook -------------------------------
-    // send to facebook to do the authentication
-    app.get('/auth/connect/facebook', passport.authorize('facebook', {scope: 'email'}));
+    var digestAuth = passport.authenticate('digest-login', {session: false});
+    app.get('/auth/token', digestAuth, function (req, res, next) {
+        var user = req.user;
+        if (user) {
+            user.serverHash = user.generateServerHash("" + user._id);
+            user.save(function (err, user) {
+                if (err)
+                    return res.status(500).json(err);
+                res.json({'token': user.serverHash});
+            });
+        }
+    });
 
-
-    app.get('/auth/facebook/callback',
-        passport.authenticate('facebook', {failureRedirect: '/app/login'}),
-        function (req, res) {
-            var user = req.user;
-
-            //redirect to local login
-            res.redirect('http://127.0.0.1:3000/login/' + user.serverHash);
-        });
+    //// facebook -------------------------------
+    //// send to facebook to do the authentication
+    //app.get('/auth/connect/facebook', passport.authorize('facebook', {scope: 'email'}));
+    //
+    //
+    //app.get('/auth/facebook/callback',
+    //    passport.authenticate('facebook', {failureRedirect: '/app/login'}),
+    //    function (req, res) {
+    //        var user = req.user;
+    //
+    //        //redirect to local login
+    //        res.redirect('http://127.0.0.1:3000/login/' + user.serverHash);
+    //    });
 };

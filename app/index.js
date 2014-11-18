@@ -6,16 +6,16 @@ var flash = require('connect-flash');
 var expressSession = require('express-session');
 var MongoStore = require('connect-mongo')(expressSession);
 var mongoose = require('mongoose');
-//var cacheManifest = require('connect-cache-manifest');
 var path = require('path');
 var methodOverride = require('method-override');
-var passportSocketIo = require("passport.socketio");
 var EventEmitter = require('events').EventEmitter;
 var authConfig = require('./config/auth.local.js');
 var appEvent = new EventEmitter();
 var app = express();
 require('./config/passport')(passport);
 
+app.prototype.__proto__ = EventEmitter.prototype;
+EventEmitter.call(app);
 
 // required for passport
 var myMongoStore = new MongoStore({
@@ -28,32 +28,6 @@ var server = app.listen(app.get('port'), function () {
 });
 var io = require('socket.io').listen(server);
 app.set('io', io);
-
-var notices = [];
-io.sockets.on('connection', function (socket) {
-    if (socket.request.user) {
-        console.log("connection!!!!!");
-        if (socket.request.user.facebook) {
-            console.log("connection11", socket.request.user.facebook.name);
-
-
-            appEvent.on('sendNotice:' + socket.request.user._id, function (data) {
-                socket.emit('notice', data);
-            });
-        }
-
-
-        socket.on('disconnect', function () {
-            if (socket.request.user.facebook) {
-                var eventName = 'sendNotice:' + socket.request.user._id;
-                appEvent.removeListener(eventName, function () {
-                });
-                console.log('disconnect11: ', socket.request.user.facebook.name);
-            }
-        });
-
-    }
-});
 
 
 //app settings
@@ -127,33 +101,45 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
-
-//socket io
-io.use(passportSocketIo.authorize({
-    cookieParser: cookieParser,
-//    key: 'express.sid',
-    secret: authConfig.secret_key,
-    store: myMongoStore,
-    success: onAuthorizeSuccess,
-    fail: onAuthorizeFail
-}));
-
-function onAuthorizeSuccess(data, accept) {
-    console.log('successful connection to socket.io');
-    accept();
-}
-
-// load up the user model
+// socket io
 var User = require('./models/schemas').User;
+io.set('authorization', function (handshakeData, callback) {
+    console.log(handshakeData._query.hash);
+    if (handshakeData._query && handshakeData._query.hash) {
+        var user_hash = handshakeData._query.hash;
+        User.findOne({serverHash: user_hash}, function (err, user) {
+            if (user) {
+                handshakeData.user = user;
+                callback(null, true); // error first, 'authorized' boolean second
+            } else {
+                callback('user not found', false); // error first, 'authorized' boolean second
+            }
+        });
+    } else {
+        callback('hash not found', false); // error first, 'authorized' boolean second
+    }
+});
 
-function onAuthorizeFail(data, message, error, accept) {
-    if (error)
-        throw new Error(message);
+io.sockets.on('connection', function (socket) {
+    if (socket.request.user) {
+        if (socket.request.user) {
+            app.on('sync:all:finish:' + socket.request.user.serverHash, function (data) {
+                console.log('emit socket');
+                socket.emit('notice', data);
+            });
+        }
 
-    console.log('failed connection to socket.io:', message);
-    if (error)
-        accept(new Error(message));
-}
+        socket.on('disconnect', function () {
+            if (socket.request.user) {
+                var eventName = 'sendNotice:' + socket.request.user._id;
+                app.removeListener(eventName, function () {
+                });
+                console.log('disconnect11: ', socket.request.user.username);
+            }
+        });
+
+    }
+});
 
 
 require('./routes/auth')(app, passport, isLoggedIn);

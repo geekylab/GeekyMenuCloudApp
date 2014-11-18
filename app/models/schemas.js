@@ -5,6 +5,10 @@ var crypto = require('crypto');
 var db = mongoose.connect('mongodb://GEEKY_MONGO/geekyMenuCloud');
 
 var Store = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     'store_name': {
         type: mongoose.Schema.Types.Mixed,
         index: true
@@ -76,6 +80,14 @@ var Store = new mongoose.Schema({
 });
 
 Store.index({location: "2dsphere"});
+Store.methods.setByParams = function (params) {
+    if (params.user)
+        this.user = params.user;
+    if (params._id)
+        this._id = params._id;
+    if (params.store_name)
+        this.store_name = params.store_name;
+};
 
 var User = mongoose.Schema({
     serverHash: String,

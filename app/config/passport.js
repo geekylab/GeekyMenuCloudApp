@@ -2,6 +2,7 @@
 
 // load all the things we need
 var LocalStrategy = require('passport-local').Strategy;
+var DigestStrategy = require('passport-http').BasicStrategy;
 
 // load up the user model
 var User = require('../models/schemas').User;
@@ -92,5 +93,32 @@ module.exports = function (passport) {
                 });
             });
         }));
+
+    // =========================================================================
+    // DIGEST LOGIN =============================================================
+    // =========================================================================
+    passport.use('digest-login', new DigestStrategy({qop: 'auth'},
+        function (username, password, done) {
+            console.log('digest-login', username);
+            User.findOne({username: username}, function (err, user) {
+                if (err) {
+                    return done(err);
+                }
+
+                if (!user) {
+                    return done(null, false);
+                }
+
+                if (!user.validPassword(password))
+                    return done(null, false, req.flash('loginMessage', 'Oops! Wrong password.'));
+
+                return done(null, user);
+            });
+        },
+        function (params, done) {
+            // validate nonces as necessary
+            done(null, true)
+        }
+    ));
 };
 
