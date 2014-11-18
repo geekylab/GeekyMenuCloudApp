@@ -8,12 +8,52 @@ module.exports = function (app, passport) {
         });
     });
 
-    //server hash
-    app.get('/auth/s/:hash', passport.authenticate('local-hash', {}),
-        function (req, res) {
-            var user = res.user;
-            console.log('test');
-        });
+    //server login
+    app.post('/auth/login', function (req, res, next) {
+        passport.authenticate('local-login', function (err, user, info) {
+            console.log('call cloud login');
+            if (err) {
+                return next(err);
+            }
+
+            if (!user) {
+                console.log('user not found');
+                return res.json({status: false, message: 'user is not found'});
+            }
+            //
+            //req.logIn(user, function(err) {
+            //    if (err) { return next(err); }
+            //    return res.redirect('/users/' + user.username);
+            //});
+            console.log('user OK');
+            return res.json({status: true, message: 'OK'});
+
+
+        })(req, res, next);
+    });
+
+    app.post('/auth/signup', function (req, res, next) {
+        passport.authenticate('local-signup', function (err, user, info) {
+            console.log('call cloud local-signup');
+            if (err) {
+                return next(err);
+            }
+
+            if (!user) {
+                console.log('user not found');
+                return res.json({status: false, message: 'user is not found'});
+            }
+            //
+            //req.logIn(user, function(err) {
+            //    if (err) { return next(err); }
+            //    return res.redirect('/users/' + user.username);
+            //});
+            console.log('user OK');
+            return res.json({status: true, message: 'OK'});
+
+
+        })(req, res, next);
+    });
 
     // facebook -------------------------------
     // send to facebook to do the authentication

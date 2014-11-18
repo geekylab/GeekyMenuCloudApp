@@ -78,31 +78,10 @@ var Store = new mongoose.Schema({
 Store.index({location: "2dsphere"});
 
 var User = mongoose.Schema({
-    serverHash: {
-        type: String
-    },
-    local: {
-        username: String,
-        password: String
-    },
-    facebook: {
-        id: String,
-        token: String,
-        email: String,
-        name: String
-    },
-    twitter: {
-        id: String,
-        token: String,
-        displayName: String,
-        username: String
-    },
-    google: {
-        id: String,
-        token: String,
-        email: String,
-        name: String
-    }
+    serverHash: String,
+    full_name: String,
+    username: String,
+    password: String
 });
 
 var Category = new mongoose.Schema({
@@ -128,7 +107,7 @@ User.methods.generateServerHash = function (token) {
 
 // checking if password is valid
 User.methods.validPassword = function (password) {
-    return bcrypt.compareSync(password, this.local.password);
+    return bcrypt.compareSync(password, this.password);
 };
 
 exports.Store = db.model('Store', Store);
