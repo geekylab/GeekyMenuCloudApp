@@ -11,6 +11,7 @@ var path = require('path');
 var methodOverride = require('method-override');
 var passportSocketIo = require("passport.socketio");
 var EventEmitter = require('events').EventEmitter;
+var authConfig = require('./config/auth.local.js');
 var appEvent = new EventEmitter();
 var app = express();
 require('./config/passport')(passport);
@@ -115,7 +116,7 @@ app.use(bodyParser.urlencoded({extended: false, limit: '50mb'}));
 app.use(cookieParser());
 
 app.use(expressSession({
-        secret: 'lfsjdlfkjsdlfjsldkjfsblablablabla',
+        secret: authConfig.secret_key,
         resave: true,
         saveUninitialized: true,
 //        cookie: {},
@@ -130,23 +131,15 @@ app.use(flash());
 //socket io
 io.use(passportSocketIo.authorize({
     cookieParser: cookieParser,
-//    key: 'express.sid',       // the name of the cookie where express/connect stores its session_id
-    secret: 'lfsjdlfkjsdlfjsldkjfsblablablabla',    // the session_secret to parse the cookie
-    store: myMongoStore,        // we NEED to use a sessionstore. no memorystore please
-    success: onAuthorizeSuccess,  // *optional* callback on success - read more below
-    fail: onAuthorizeFail      // *optional* callback on fail/error - read more below
+//    key: 'express.sid',
+    secret: authConfig.secret_key,
+    store: myMongoStore,
+    success: onAuthorizeSuccess,
+    fail: onAuthorizeFail
 }));
 
 function onAuthorizeSuccess(data, accept) {
     console.log('successful connection to socket.io');
-
-    //// The accept-callback still allows us to decide whether to
-    //// accept the connection or not.
-    //accept(null, true);
-    //
-    //// OR
-    //
-    //// If you use socket.io@1.X the callback looks different
     accept();
 }
 
@@ -157,24 +150,9 @@ function onAuthorizeFail(data, message, error, accept) {
     if (error)
         throw new Error(message);
 
-    if (data._query.hash) {
-        User.findOne({serverHash: data._query.hash}, function (err, user) {
-            if (!user) {
-                console.log("not user", data._query.hash);
-                accept(new Error("err"));
-            } else {
-                data['user'] = user;
-                data['user'].logged_in = true;
-                accept();
-            }
-        });
-    } else {
-        console.log('failed connection to socket.io:', message);
-        if (error)
-            accept(new Error(message));
-        // this error will be sent to the user as a special error-package
-        // see: http://socket.io/docs/client-api/#socket > error-object
-    }
+    console.log('failed connection to socket.io:', message);
+    if (error)
+        accept(new Error(message));
 }
 
 
