@@ -84,7 +84,7 @@ var Store = new mongoose.Schema({
 });
 
 Store.index({location: "2dsphere"});
-Store.methods.setByParams = function (params) {
+Store.methods.setByParams = function (params, callback) {
     if (params._id)
         this.org_id = params._id;
 
@@ -129,6 +129,8 @@ Store.methods.setByParams = function (params) {
 
     if (params.created)
         this.created = params.created;
+
+    callback();
 };
 
 var Item = new mongoose.Schema({
@@ -175,7 +177,7 @@ var Item = new mongoose.Schema({
     }
 });
 
-Item.methods.setByParams = function (params) {
+Item.methods.setByParams = function (params, callback) {
     if (params._id)
         this.org_id = params._id;
 
@@ -190,11 +192,25 @@ Item.methods.setByParams = function (params) {
 
     if (params.price)
         this.price = params.price;
+
     if (params.time)
         this.time = params.time;
 
     if (params.created)
         this.created = params.created;
+
+    if (params.store) {
+        var self = this;
+        exports.Store.findOne({org_id: params.store, user: params.user}, function (err, store) {
+            var idx = self.store.indexOf(store._id);
+            if (idx === -1) {
+                self.store.push(store);
+            }
+            callback();
+        });
+    }
+
+
 };
 
 

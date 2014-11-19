@@ -16,6 +16,40 @@ module.exports = function (app, passport, appEvent) {
         });
     });
 
+    app.post('/sync/store/:store_id?', digestAuth, function (req, res) {
+        var user = req.user;
+        if (req.params.store_id) {
+            var newStore = req.body.store;
+            globalSchema.Store.findOne({org_id: req.params.store_id, user: user._id}, function (err, store) {
+                console.log(newStore);
+                store.store_name = newStore.store_name;
+                store.seat_count = newStore.seat_count;
+                store.location = newStore.location;
+                store.address2 = newStore.address2;
+                store.address = newStore.address;
+                store.city = newStore.city;
+                store.state = newStore.state;
+                store.zip_code = newStore.zip_code;
+                store.country = newStore.country;
+                store.tel = newStore.tel;
+                store.desc = newStore.desc;
+                store.created = newStore.created;
+                store.tables = newStore.tables;
+                store.opts = newStore.opts;
+                store.images = newStore.images;
+                store.seat_type = newStore.seat_type;
+                store.opening_hour = newStore.opening_hour;
+                store.user = req.user._id;
+                store.save(function () {
+                    if (err) throw err;
+                    res.json({status: true, message: 'store is updated', store: store});
+                });
+
+
+            });
+        }
+    });
+
     var io = app.get('io');
     app.post('/sync/all', digestAuth, function (req, res) {
         if (req.body.data != undefined) {
@@ -34,11 +68,12 @@ module.exports = function (app, passport, appEvent) {
                                         }
                                         if (obj.setByParams) {
                                             updateData.user = user._id;
-                                            obj.setByParams(updateData);
-                                            obj.save(function (err) {
-                                                if (err)
-                                                    throw err;
-                                                return callback1();
+                                            obj.setByParams(updateData, function () {
+                                                obj.save(function (err) {
+                                                    if (err)
+                                                        throw err;
+                                                    return callback1();
+                                                });
                                             });
                                         } else {
                                             return callback1();
