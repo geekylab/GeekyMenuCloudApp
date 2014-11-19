@@ -96,7 +96,7 @@ app.use(expressSession({
 //        cookie: {},
         store: myMongoStore
     })
-); // session secret
+);
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
