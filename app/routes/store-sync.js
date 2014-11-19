@@ -4,7 +4,8 @@ module.exports = function (app, passport, appEvent) {
     var digestAuth = passport.authenticate('digest-login', {session: false});
     var globalSchema = require('../models/schemas');
     var schemasObjs = {
-        'store': globalSchema.Store
+        'store': globalSchema.Store,
+        'item': globalSchema.Item
     };
 
     app.get('/sync', digestAuth, function (req, res) {
@@ -25,28 +26,21 @@ module.exports = function (app, passport, appEvent) {
                     if (data.type && data.name && schemasObjs[data.name]) {
                         var schemaObj = schemasObjs[data.name];
                         async.eachSeries(data.datas, function (updateData, callback1) {
-                            if (data.type == 'update' || data.type == 'save') {
-                                console.log("start");
+                            if (updateData != null && data.type == 'update' || data.type == 'save') {
                                 if (updateData._id) {
-                                    console.log("has id");
-                                    schemaObj.findOne({_id: updateData._id, user: user._id}, function (err, obj) {
-                                        console.log("find call back");
+                                    schemaObj.findOne({org_id: updateData._id, user: user._id}, function (err, obj) {
                                         if (!obj) {
-                                            console.log("no obj");
                                             obj = new schemasObjs[data.name];
                                         }
-
                                         if (obj.setByParams) {
                                             updateData.user = user._id;
                                             obj.setByParams(updateData);
                                             obj.save(function (err) {
                                                 if (err)
                                                     throw err;
-                                                console.log('callback1');
                                                 return callback1();
                                             });
                                         } else {
-                                            console.log('no setByParams', 'callback1');
                                             return callback1();
                                         }
                                     });
@@ -65,7 +59,6 @@ module.exports = function (app, passport, appEvent) {
                                 console.log('A file failed to process');
                             } else {
                                 console.log('All files have been processed successfully');
-                                console.log('callback');
                                 callback();
                             }
                         });

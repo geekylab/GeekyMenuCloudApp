@@ -9,6 +9,10 @@ var Store = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
+    org_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        index: true
+    },
     'store_name': {
         type: mongoose.Schema.Types.Mixed,
         index: true
@@ -81,13 +85,118 @@ var Store = new mongoose.Schema({
 
 Store.index({location: "2dsphere"});
 Store.methods.setByParams = function (params) {
+    if (params._id)
+        this.org_id = params._id;
+
     if (params.user)
         this.user = params.user;
-    if (params._id)
-        this._id = params._id;
+
     if (params.store_name)
         this.store_name = params.store_name;
+
+    if (params.opts)
+        this.opts = params.opts;
+
+    if (params.tel)
+        this.tel = params.tel;
+
+    if (params.country)
+        this.country = params.country;
+
+    if (params.zip_code)
+        this.zip_code = params.zip_code;
+
+    if (params.state)
+        this.state = params.state;
+
+    if (params.city)
+        this.city = params.city;
+
+    if (params.address)
+        this.address = params.address;
+
+    if (params.location)
+        this.location = params.location;
+
+    if (params.seat_count)
+        this.seat_count = params.seat_count;
+
+    if (params.opening_hour)
+        this.opening_hour = params.opening_hour;
+
+    if (params.seat_type)
+        this.seat_type = params.seat_type;
+
+    if (params.created)
+        this.created = params.created;
 };
+
+var Item = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    org_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        index: true
+    },
+    name: {
+        type: mongoose.Schema.Types.Mixed,
+        index: true,
+        required: true
+    },
+    desc: {
+        type: mongoose.Schema.Types.Mixed,
+        index: true,
+        required: true
+    },
+    price: {
+        type: Number,
+        default: 0,
+        index: true
+    },
+    'time': {
+        type: Number,
+        default: 0
+    },
+    store: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Store'
+    }],
+
+//    'images': [Image],
+    //'categories': [{
+    //    type: mongoose.Schema.Types.ObjectId,
+    //    ref: 'Category'
+    //}],
+    created: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+Item.methods.setByParams = function (params) {
+    if (params._id)
+        this.org_id = params._id;
+
+    if (params.user)
+        this.user = params.user;
+
+    if (params.name)
+        this.name = params.name;
+
+    if (params.desc)
+        this.desc = params.desc;
+
+    if (params.price)
+        this.price = params.price;
+    if (params.time)
+        this.time = params.time;
+
+    if (params.created)
+        this.created = params.created;
+};
+
 
 var User = mongoose.Schema({
     serverHash: String,
@@ -125,3 +234,4 @@ User.methods.validPassword = function (password) {
 exports.Store = db.model('Store', Store);
 exports.User = db.model('User', User);
 exports.Category = db.model('Category', Category);
+exports.Item = db.model('Item', Item);
