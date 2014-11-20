@@ -18,7 +18,15 @@ angular.module('RequestTester')
         ]
     }).controller('StoreCtrl', function ($scope, $http, Settings) {
 
+        $scope.api_host = Settings.api_host;
+        $scope.langs = [
+            {code: 'us'},
+            {code: 'jp'},
+            {code: 'br'}
+        ];
+        $scope.selectedLang = $scope.langs[0];
         $scope.response = '';
+        $scope.responseString = '';
         $scope.params = {
             store_id: ''
         };
@@ -45,9 +53,10 @@ angular.module('RequestTester')
         $scope.doRequest = function () {
             $http.post($scope.requestUrl, $scope.filters)
                 .success(function (json) {
-                    $scope.response = JSON.stringify(json, null, '  ');
+                    $scope.response = json;
+                    $scope.responseString = JSON.stringify(json, null, '  ');
                 }).error(function (json) {
-                    $scope.response = JSON.stringify(json, null, '  ');
+                    $scope.responseString = JSON.stringify(json, null, '  ');
                 });
         };
 

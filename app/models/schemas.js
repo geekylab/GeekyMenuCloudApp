@@ -67,15 +67,8 @@ var Store = new mongoose.Schema({
         type: String
     }],
     'images': [{
-        path: {
-            type: String
-        },
-        filename: {
-            type: mongoose.Schema.Types.Mixed
-        },
-        desc: {
-            type: mongoose.Schema.Types.Mixed
-        }
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'ImageStorage'
     }],
     'opts': [{
         type: String,
@@ -97,6 +90,9 @@ Store.methods.setByParams = function (params, callback) {
 
     if (params.store_name)
         this.store_name = params.store_name;
+
+    if (params.desc)
+        this.desc = params.desc;
 
     if (params.opts)
         this.opts = params.opts;
@@ -137,6 +133,7 @@ Store.methods.setByParams = function (params, callback) {
         this.created = params.created;
 
     if (params.images && params.images.length > 0) {
+        var self = this;
         async.eachSeries(params.images, function (img, next) {
             exports.ImageStorage.findOne({org_id: img._id}, function (err, _img) {
 
@@ -146,6 +143,9 @@ Store.methods.setByParams = function (params, callback) {
                 img.user = params.user;
                 _img.setByParams(img, function (err2) {
                     _img.save(function (err3) {
+                        var idx = self.images.indexOf(_img._id);
+                        if (idx == -1)
+                            self.images.push(_img._id);
                         next(err3);
                     });
                 });
