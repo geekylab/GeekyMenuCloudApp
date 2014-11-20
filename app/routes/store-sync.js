@@ -22,6 +22,9 @@ module.exports = function (app, passport, appEvent) {
             var newStore = req.body.store;
             globalSchema.Store.findOne({org_id: req.params.store_id, user: user._id}, function (err, store) {
                 console.log(newStore);
+                if (!store){
+                    store = new globalSchema.Store();
+                }
                 store.store_name = newStore.store_name;
                 store.seat_count = newStore.seat_count;
                 store.location = newStore.location;
