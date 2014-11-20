@@ -44,7 +44,10 @@ var Store = new mongoose.Schema({
     'address2': {
         type: String
     },
-    location: [Number, Number],
+    location: {
+        type: [Number],
+        index: '2d'
+    },
     seat_count: {
         type: Number
     },
@@ -83,7 +86,7 @@ var Store = new mongoose.Schema({
     }
 });
 
-Store.index({location: "2dsphere"});
+//Store.index({location: "2dsphere"});
 Store.methods.setByParams = function (params, callback) {
     if (params._id)
         this.org_id = params._id;
@@ -115,8 +118,10 @@ Store.methods.setByParams = function (params, callback) {
     if (params.address)
         this.address = params.address;
 
-    if (params.location)
+    if (params.location && params.location.length == 2) {
+        console.log(params.location);
         this.location = params.location;
+    }
 
     if (params.seat_count)
         this.seat_count = params.seat_count;
@@ -202,11 +207,15 @@ Item.methods.setByParams = function (params, callback) {
     if (params.store) {
         var self = this;
         exports.Store.findOne({org_id: params.store, user: params.user}, function (err, store) {
-            var idx = self.store.indexOf(store._id);
-            if (idx === -1) {
-                self.store.push(store);
+            if (!store) {
+                callback('Can\'t find store');
+            } else {
+                var idx = self.store.indexOf(store._id);
+                if (idx === -1) {
+                    self.store.push(store);
+                }
+                callback();
             }
-            callback();
         });
     }
 

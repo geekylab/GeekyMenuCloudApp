@@ -33,6 +33,7 @@ app.set('io', io);
 //app settings
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'GeekyOSEasyControl/app'));
+
 //cache
 /*
  app.use(cacheManifest({
@@ -151,6 +152,9 @@ require('./routes/open-api')(app, passport, isLoggedIn);
 
 //store sync
 require('./routes/store-sync')(app, passport, appEvent, isLoggedIn);
+
+//api test
+app.use('/request-tester', express.static(path.join(__dirname, 'views/api-tester')));
 
 
 //catch 404 and forward to error handler
