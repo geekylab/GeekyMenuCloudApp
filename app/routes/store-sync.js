@@ -16,6 +16,27 @@ module.exports = function (app, passport, appEvent) {
         });
     });
 
+    app.post('/sync/image', digestAuth, function (req, res) {
+        var size = 0;
+
+        req.on('data', function (data) {
+            size += data.length;
+            console.log('Got chunk: ' + data.length + ' total: ' + size);
+        });
+
+        req.on('end', function () {
+            console.log("total size = " + size);
+            res.end("Thanks");
+        });
+
+        req.on('error', function(e) {
+            console.log("ERROR ERROR: " + e.message);
+        });
+
+        res.send("Thanks");
+    });
+
+
     app.post('/sync/store/:store_id?', digestAuth, function (req, res) {
         var user = req.user;
         if (req.params.store_id) {

@@ -111,5 +111,18 @@ module.exports = function (app, passport) {
         }
     });
 
+    /**
+     * image
+     */
+
+    app.get('/open-api/image/:id', function (req, res, next) {
+        var user = req.user;
+        globalSchema.ImageStorage.findById(req.params.id, function (err, doc) {
+            if (err) return next(err);
+            res.contentType(doc.contentType);
+            res.write(doc.data);
+            res.end();
+        });
+    });
 
 };

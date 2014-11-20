@@ -8,5 +8,8 @@ angular
             }).when('/store', {
                 templateUrl: 'views/store.html',
                 controller: 'StoreCtrl'
+            }).when('/image', {
+                templateUrl: 'views/image.html',
+                controller: 'ImageCtrl'
             });
     });

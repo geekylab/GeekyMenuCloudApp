@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var bcrypt = require('bcrypt-nodejs');
 var crypto = require('crypto');
+var async = require('async');
 
 var db = mongoose.connect('mongodb://GEEKY_MONGO/geekyMenuCloud');
 
@@ -135,7 +136,27 @@ Store.methods.setByParams = function (params, callback) {
     if (params.created)
         this.created = params.created;
 
-    callback();
+    if (params.images && params.images.length > 0) {
+        async.eachSeries(params.images, function (img, next) {
+            exports.ImageStorage.findOne({org_id: img._id}, function (err, _img) {
+
+                if (!_img) {
+                    _img = new exports.ImageStorage();
+                }
+                img.user = params.user;
+                _img.setByParams(img, function (err2) {
+                    _img.save(function (err3) {
+                        next(err3);
+                    });
+                });
+            });
+        }, function (err) {
+            console.log('OK');
+            callback();
+        });
+    } else {
+        callback();
+    }
 };
 
 var Item = new mongoose.Schema({
@@ -222,6 +243,38 @@ Item.methods.setByParams = function (params, callback) {
 
 };
 
+var ImageStorage = new mongoose.Schema({
+    org_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        index: true
+    },
+    data: Buffer,
+    contentType: String,
+    filename: String,
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }
+});
+
+ImageStorage.methods.setByParams = function (params, callback) {
+
+    if (params._id)
+        this.org_id = params._id;
+
+    if (params.user)
+        this.user = params.user;
+
+    if (params.filename)
+        this.filename = params.filename;
+
+    if (params.contentType)
+        this.contentType = params.contentType;
+
+    if (params.data)
+        this.data = params.data;
+    callback();
+};
 
 var User = mongoose.Schema({
     serverHash: String,
@@ -260,3 +313,4 @@ exports.Store = db.model('Store', Store);
 exports.User = db.model('User', User);
 exports.Category = db.model('Category', Category);
 exports.Item = db.model('Item', Item);
+exports.ImageStorage = db.model('ImageStorage', ImageStorage);
