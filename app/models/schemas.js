@@ -225,6 +225,8 @@ Item.methods.setByParams = function (params, callback) {
     if (params.created)
         this.created = params.created;
 
+    console.log(params.images);
+
     if (params.store) {
         var self = this;
         exports.Store.findOne({org_id: params.store, user: params.user}, function (err, store) {

@@ -66,7 +66,7 @@ module.exports = function (app, passport) {
         }
     });
 
-    app.get('/open-api/item/:store_id/:item_id?', function (req, res) {
+    app.post('/open-api/item/:store_id/:item_id?', function (req, res) {
         var filter = {};
 
         if (!req.params.store_id) {

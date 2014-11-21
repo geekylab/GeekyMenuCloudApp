@@ -13,6 +13,9 @@ angular.module('RequestTester')
                 name: 'store'
             },
             {
+                name: 'item'
+            },
+            {
                 name: 'image'
             }
         ]
@@ -40,6 +43,59 @@ angular.module('RequestTester')
             }
             $scope.requestUrl = Settings.api_host + '/open-api/store' + params;
         });
+
+        $scope.filters = {
+            location: {
+                lng: '-46.374643',
+                lat: '-23.969835',
+                maxDistance: 1
+            }
+        };
+
+
+        $scope.doRequest = function () {
+            $http.post($scope.requestUrl, $scope.filters)
+                .success(function (json) {
+                    $scope.response = json;
+                    $scope.responseString = JSON.stringify(json, null, '  ');
+                }).error(function (json) {
+                    $scope.responseString = JSON.stringify(json, null, '  ');
+                });
+        };
+
+    }).controller('ItemCtrl', function ($scope, $http, Settings) {
+
+        $scope.api_host = Settings.api_host;
+        $scope.langs = [
+            {code: 'us'},
+            {code: 'jp'},
+            {code: 'br'}
+        ];
+        $scope.selectedLang = $scope.langs[0];
+        $scope.response = '';
+        $scope.responseString = '';
+        $scope.params = {
+            store_id: '',
+            item_id: ''
+        };
+        $scope.requestUrl = $scope.baseUrl = Settings.api_host + '/open-api/item';
+        $scope.baseUrl += '[/:store_id]';
+
+        $scope.$watch('params', function (n, o) {
+            var item_param = '';
+            var store_param = '';
+            if (n.store_id) {
+                store_param = '/' + n.store_id;
+            }
+            if (n.item_id) {
+                if (!store_param)
+                    item_param = '//' + n.item_id;
+                else
+                    item_param = '/' + n.item_id;
+            }
+
+            $scope.requestUrl = Settings.api_host + '/open-api/item' + store_param + item_param;
+        }, true);
 
         $scope.filters = {
             location: {
