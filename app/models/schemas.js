@@ -159,6 +159,25 @@ Store.methods.setByParams = function (params, callback) {
     }
 };
 
+var Image = new mongoose.Schema({
+    image: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'ImageStorage'
+    },
+    filename: {
+        type: mongoose.Schema.Types.Mixed
+    },
+    sort_order: {
+        type: Number,
+        default: 0
+    },
+    image_type: {
+        type: Number,
+        default: 0
+    }
+});
+
+
 var Item = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
@@ -192,7 +211,7 @@ var Item = new mongoose.Schema({
         ref: 'Store'
     }],
 
-//    'images': [Image],
+    'images': [Image],
     //'categories': [{
     //    type: mongoose.Schema.Types.ObjectId,
     //    ref: 'Category'
@@ -225,19 +244,57 @@ Item.methods.setByParams = function (params, callback) {
     if (params.created)
         this.created = params.created;
 
-    if (params.store) {
+    if (params.store || params.images) {
         var self = this;
-        exports.Store.findOne({org_id: params.store, user: params.user}, function (err, store) {
-            if (!store) {
-                callback('Can\'t find store');
-            } else {
-                var idx = self.store.indexOf(store._id);
-                if (idx === -1) {
-                    self.store.push(store);
+        async.series([
+            function (asyncCallback) {
+                if (params.store) {
+                    exports.Store.findOne({org_id: params.store, user: params.user}, function (err, store) {
+                        if (!store) {
+                            asyncCallback('Can\'t find store');
+                        } else {
+                            var idx = self.store.indexOf(store._id);
+                            if (idx === -1) {
+                                self.store.push(store);
+                            }
+                            asyncCallback();
+                        }
+                    });
+                } else {
+                    asyncCallback();
                 }
-                callback();
+            }, function (asyncCallback) {
+                if (params.images && params.images.length > 0) {
+                    async.eachSeries(params.images, function (img, next) {
+                        if (img.image._id) {
+                            exports.ImageStorage.findOne({org_id: img.image._id}, function (err, _img) {
+                                if (!_img) {
+                                    _img = new exports.ImageStorage();
+                                }
+                                img.image.user = params.user;
+                                _img.setByParams(img.image, function (err2) {
+                                    _img.save(function (err3) {
+                                        img.image = _img._id;
+                                        next(err3);
+                                    });
+                                });
+                            });
+                        } else {
+                            next('no image id');
+                        }
+                    }, function (err) {
+                        self.images = params.images;
+                        asyncCallback();
+                    });
+                } else {
+                    asyncCallback();
+                }
+
             }
+        ], function (err, results) {
+            callback(err);
         });
+
     }
 
 

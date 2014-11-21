@@ -1,0 +1,91 @@
+<div>
+    <div class="col-md-6">
+        <h1>Store</h1>
+        <h4>Sample url : {{baseUrl}}</h4>
+        <h4>Request URL : {{requestUrl}}</h4>
+
+
+        <div>
+            <p>Params</p>
+            <ul>
+                <li>
+                    <p>store_id</p>
+                    <input type="text" class="form-control" ng-model="params.store_id">
+                </li>
+                <li>
+                    <p>item_id</p>
+                    <input type="text" class="form-control" ng-model="params.item_id">
+                </li>
+            </ul>
+        </div>
+
+        <div>
+            <p>Filters</p>
+            <!--<ul>-->
+            <!--<li>-->
+            <!--<p>Longitude</p>-->
+            <!--<input ng-model="filters.location.lng"/>-->
+
+            <!--<p>Latitude</p>-->
+            <!--<input ng-model="filters.location.lat"/>-->
+
+            <!--<p>MaxDistance (Km)</p>-->
+            <!--<input ng-model="filters.location.maxDistance"/>-->
+            <!--</li>-->
+            <!--</ul>-->
+        </div>
+
+        <button ng-click="doRequest()">Request</button>
+    </div>
+    <div class="col-md-6">
+        <h3>Json info</h3>
+
+        <div>
+            <textarea style="width: 100%;" rows="10" ng-model="responseString"></textarea>
+        </div>
+
+        <h3>Store info</h3>
+        <select ng-model="selectedLang" ng-options="value.code for value in langs"></select>
+        <table class="table" ng-repeat="item in response.data">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Value</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Name</td>
+                <td>
+                    {{item.name[selectedLang.code]}}
+                </td>
+            </tr>
+            <tr>
+                <td>desc</td>
+                <td>
+                    {{item.desc[selectedLang.code]}}
+                </td>
+            </tr>
+            <tr>
+                <td>images</td>
+                <td>
+                    <div class="row" ng-repeat="img in item.images">
+                        <div class="col-md-4">
+                            <img ng-src="{{api_host}}/open-api/image/{{img.image}}"
+                                 width="150"/>
+                        </div>
+                        <div class="col-md-4">
+                            <p>{{img.filename[selectedLang.code]}}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p>img.image_type</p>
+                        </div>
+                    </div>
+
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+

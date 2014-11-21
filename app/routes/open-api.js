@@ -43,13 +43,7 @@ module.exports = function (app, passport) {
                 }
             }
 
-            console.log(filter);
-            globalSchema.Store.find({
-                location: {
-                    $near: [req.body.location.lng, req.body.location.lat],
-                    $maxDistance: maxDistance
-                }
-            }, function (err, stores) {
+            globalSchema.Store.find(filter, function (err, stores) {
                 if (err) {
                     console.log(err);
                     return res.status(400).json({
@@ -66,7 +60,7 @@ module.exports = function (app, passport) {
         }
     });
 
-    app.get('/open-api/item/:store_id/:item_id?', function (req, res) {
+    app.post('/open-api/item/:store_id/:item_id?', function (req, res) {
         var filter = {};
 
         if (!req.params.store_id) {
@@ -82,32 +76,36 @@ module.exports = function (app, passport) {
         }
 
         if (filter._id) {
-            globalSchema.Item.findOne(filter, function (err, item) {
-                if (err) {
-                    return res.status(400).json({
-                        status: false,
-                        message: err
-                    });
-                } else {
-                    return res.json({
-                        status: true,
-                        data: item
-                    });
-                }
-            });
+            globalSchema.Item.findOne(filter)
+                .populate('images')
+                .exec(function (err, item) {
+                    if (err) {
+                        return res.status(400).json({
+                            status: false,
+                            message: err
+                        });
+                    } else {
+                        return res.json({
+                            status: true,
+                            data: item
+                        });
+                    }
+                });
         } else {
-            globalSchema.Item.find(filter, function (err, items) {
-                if (err) {
-                    return res.status(400).json({
-                        status: false, message: err
-                    });
-                } else {
-                    return res.json({
-                        status: true,
-                        data: items
-                    });
-                }
-            });
+            globalSchema.Item.find(filter)
+                .populate('images')
+                .exec(function (err, items) {
+                    if (err) {
+                        return res.status(400).json({
+                            status: false, message: err
+                        });
+                    } else {
+                        return res.json({
+                            status: true,
+                            data: items
+                        });
+                    }
+                });
         }
     });
 
