@@ -1,4 +1,5 @@
 var express = require('express');
+var cors = require('cors');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var passport = require('passport');
@@ -148,7 +149,7 @@ app.use('/app', express.static(path.join(__dirname, '/GeekyOSEasyControl/app')))
 require('./routes/app-core')(app, passport, isLoggedIn);
 
 //open api
-require('./routes/open-api')(app, passport, isLoggedIn);
+require('./routes/open-api')(app, passport, isLoggedIn, cors);
 
 //store sync
 require('./routes/store-sync')(app, passport, appEvent, isLoggedIn);

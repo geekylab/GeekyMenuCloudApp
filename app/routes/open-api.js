@@ -1,6 +1,6 @@
 var globalSchema = require('../models/schemas');
 
-module.exports = function (app, passport) {
+module.exports = function (app, passport, isLoggedIn, cors) {
     var version = '0.0.1';
 
     app.get('/open-api', function (req, res) {
@@ -11,7 +11,7 @@ module.exports = function (app, passport) {
     });
 
 
-    app.post('/open-api/store/:store_id?', function (req, res) {
+    app.post('/open-api/store/:store_id?', cors(), function (req, res) {
         var filter = {};
         if (req.params.store_id)
             filter._id = req.params.store_id;
@@ -60,7 +60,7 @@ module.exports = function (app, passport) {
         }
     });
 
-    app.post('/open-api/item/:store_id/:item_id?', function (req, res) {
+    app.post('/open-api/item/:store_id/:item_id?', cors(), function (req, res) {
         var filter = {};
 
         if (!req.params.store_id) {
@@ -113,7 +113,7 @@ module.exports = function (app, passport) {
      * image
      */
 
-    app.get('/open-api/image/:id', function (req, res, next) {
+    app.get('/open-api/image/:id', cors(), function (req, res, next) {
         var user = req.user;
         globalSchema.ImageStorage.findById(req.params.id, function (err, doc) {
             if (err) return next(err);
