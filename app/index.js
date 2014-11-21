@@ -13,6 +13,9 @@ var EventEmitter = require('events').EventEmitter;
 var authConfig = require('./config/auth.local.js');
 var appEvent = new EventEmitter();
 var app = express();
+
+app.use(cors());
+
 require('./config/passport')(passport);
 
 app.prototype.__proto__ = EventEmitter.prototype;

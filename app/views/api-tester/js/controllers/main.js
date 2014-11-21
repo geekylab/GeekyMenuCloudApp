@@ -54,6 +54,9 @@ angular.module('RequestTester')
 
 
         $scope.doRequest = function () {
+
+            console.log($scope.requestUrl);
+
             $http.post($scope.requestUrl, $scope.filters)
                 .success(function (json) {
                     $scope.response = json;

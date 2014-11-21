@@ -24,7 +24,7 @@ module.exports = function (app, passport, isLoggedIn) {
     app.get('/app/:name', function (req, res) {
         res.render(req.params.name + '.ejs', {}, function (err, html) {
             if (err) {
-                res.status(404).end(err);
+                res.status(404).end('error string');
             } else {
                 res.end(html);
             }
