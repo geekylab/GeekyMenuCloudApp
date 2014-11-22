@@ -142,7 +142,6 @@ angular.module('RequestTester')
         //    }
         //};
 
-
         $scope.doRequest = function () {
             if ($scope.params.image_id) {
                 $scope.imageSrc = $scope.requestUrl;
