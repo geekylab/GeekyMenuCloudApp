@@ -212,10 +212,10 @@ var Item = new mongoose.Schema({
     }],
 
     'images': [Image],
-    //'categories': [{
-    //    type: mongoose.Schema.Types.ObjectId,
-    //    ref: 'Category'
-    //}],
+    'categories': [{
+       type: mongoose.Schema.Types.ObjectId,
+       ref: 'Category'
+    }],
     created: {
         type: Date,
         default: Date.now
@@ -244,7 +244,7 @@ Item.methods.setByParams = function (params, callback) {
     if (params.created)
         this.created = params.created;
 
-    if (params.store || params.images) {
+    if (params.store || params.images || params.categories) {
         var self = this;
         async.series([
             function (asyncCallback) {
@@ -263,7 +263,28 @@ Item.methods.setByParams = function (params, callback) {
                 } else {
                     asyncCallback();
                 }
-            }, function (asyncCallback) {
+            },function (asyncCallback) {
+                if (params.categories) {
+                    async.eachSeries(params.categories, function (category, next) {
+                        // console.log("category in eachSeries", {org_id: category, user: params.user});
+                        exports.Category.findOne({org_id: category, user: params.user}, function (err, category) {
+                            if (!category) {
+                                next('Can\'t find category');
+                            } else {
+                                var idx = self.categories.indexOf(category._id);
+                                if (idx === -1) {
+                                    self.categories.push(category);
+                                }
+                                next();
+                            }
+                        });
+                    },function (err) {
+                        asyncCallback(err);
+                    })
+                } else {
+                    asyncCallback();
+                }
+            },function (asyncCallback) {
                 if (params.images && params.images.length > 0) {
                     async.eachSeries(params.images, function (img, next) {
                         if (img.image._id) {
@@ -294,10 +315,7 @@ Item.methods.setByParams = function (params, callback) {
         ], function (err, results) {
             callback(err);
         });
-
     }
-
-
 };
 
 var ImageStorage = new mongoose.Schema({
@@ -341,15 +359,63 @@ var User = mongoose.Schema({
 });
 
 var Category = new mongoose.Schema({
+    org_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        index: true
+    },
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     name: {
         type: mongoose.Schema.Types.Mixed,
         index: true
     },
+    store: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Store'
+    }],    
     created: {
         type: Date,
         default: Date.now
     }
 });
+
+Category.methods.setByParams = function (params, callback) {
+
+    if (params._id)
+        this.org_id = params._id;
+
+    if (params.user)
+        this.user = params.user;
+
+    if (params.store)
+        this.store = params.store;    
+
+    if (params.name)
+        this.name = params.name;
+
+
+    if (params.store) {
+        var self = this;
+        exports.Store.findOne({org_id: params.store, user: params.user}, function (err, store) {
+            if (!store) {
+                asyncCallback('Can\'t find store');
+            } else {
+                var idx = self.store.indexOf(store._id);
+                if (idx === -1) {
+                    self.store.push(store);
+                }
+                callback();
+            }
+        });
+    } else {
+        callback();
+    }
+};
+
+
+
 
 // methods ======================
 // generating a hash

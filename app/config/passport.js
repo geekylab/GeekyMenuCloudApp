@@ -2,7 +2,9 @@
 
 // load all the things we need
 var LocalStrategy = require('passport-local').Strategy;
+var GoogleTokenStrategy = require('passport-google-token').Strategy;
 var DigestStrategy = require('passport-http').BasicStrategy;
+var authConfig = require('../config/auth.local.js');
 
 // load up the user model
 var User = require('../models/schemas').User;
@@ -120,5 +122,20 @@ module.exports = function (passport) {
             done(null, true)
         }
     ));
+
+
+    passport.use('google-token',new GoogleTokenStrategy({
+        clientID: authConfig.googleAuth.clientID,
+        clientSecret: authConfig.googleAuth.clientSecret
+      },
+      function(accessToken, refreshToken, profile, done) {
+        console.log(profile);
+        return done(null, profile);
+        // User.findOrCreate({ googleId: profile.id }, function (err, user) {
+        //   return done(err, user);
+        // });
+      }
+    ));
+
 };
 

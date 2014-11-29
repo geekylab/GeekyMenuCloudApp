@@ -68,6 +68,12 @@ module.exports = function (app, passport) {
         }
     });
 
+    app.post('/auth/google-token', passport.authenticate('google-token'), function(req, res, next) {
+        var user = req.user;
+        console.log(user);
+        return res.json({status: true, message: 'OK'});
+    });
+
     //// facebook -------------------------------
     //// send to facebook to do the authentication
     //app.get('/auth/connect/facebook', passport.authorize('facebook', {scope: 'email'}));

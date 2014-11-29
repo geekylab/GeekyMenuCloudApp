@@ -1,0 +1,67 @@
+<div>
+<div>
+    <div class="col-md-6">
+        <h1>Category</h1>
+        <h4>Sample url : {{baseUrl}}</h4>
+        <h4>Request URL : {{requestUrl}}</h4>
+
+
+        <div>
+            <p>Params</p>
+            <ul>
+                <li>
+                    <p>store_id</p>
+                    <input type="text" class="form-control" ng-model="params.store_id">
+                </li>
+                <li>
+                		<p> lang </p>
+	                	<select ng-model="params.lang" ng-options="value.code for value in langs"></select>
+                </li>
+            </ul>
+        </div>
+
+        <div>
+            <p>Filters</p>
+            <!--<ul>-->
+            <!--<li>-->
+            <!--<p>Longitude</p>-->
+            <!--<input ng-model="filters.location.lng"/>-->
+
+            <!--<p>Latitude</p>-->
+            <!--<input ng-model="filters.location.lat"/>-->
+
+            <!--<p>MaxDistance (Km)</p>-->
+            <!--<input ng-model="filters.location.maxDistance"/>-->
+            <!--</li>-->
+            <!--</ul>-->
+        </div>
+
+        <button ng-click="doRequest()">Request</button>
+    </div>
+    <div class="col-md-6">
+        <h3>Json info</h3>
+
+        <div>
+            <textarea style="width: 100%;" rows="10" ng-model="responseString"></textarea>
+        </div>
+
+        <h3>Store info</h3>
+        <table class="table" ng-repeat="category in response.data">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Value</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Name</td>
+                <td>
+                    {{category.name}}
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+

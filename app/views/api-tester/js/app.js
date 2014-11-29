@@ -8,6 +8,11 @@ angular
             }).when('/store', {
                 templateUrl: 'views/store.html',
                 controller: 'StoreCtrl'
+
+            }).when('/category', {
+                templateUrl: 'views/category.html',
+                controller: 'CategoryCtrl'
+                
             }).when('/item', {
                 templateUrl: 'views/item.html',
                 controller: 'ItemCtrl'

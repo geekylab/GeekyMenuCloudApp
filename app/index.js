@@ -88,19 +88,19 @@ app.set('views', path.join(__dirname, 'GeekyOSEasyControl/app'));
  networks: ['*'],
  fallbacks: []
  }));
- */
+*/
 app.use(methodOverride());
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({extended: false, limit: '50mb'}));
 app.use(cookieParser());
 
 app.use(expressSession({
-        secret: authConfig.secret_key,
-        resave: true,
-        saveUninitialized: true,
+    secret: authConfig.secret_key,
+    resave: true,
+    saveUninitialized: true,
 //        cookie: {},
-        store: myMongoStore
-    })
+store: myMongoStore
+})
 );
 app.use(passport.initialize());
 app.use(passport.session());
@@ -153,12 +153,16 @@ require('./routes/app-core')(app, passport, isLoggedIn);
 
 //open api
 require('./routes/open-api')(app, passport, isLoggedIn, cors);
+//api test
+app.use('/assets', express.static(path.join(__dirname, 'views/assets')));
 
 //store sync
 require('./routes/store-sync')(app, passport, appEvent, isLoggedIn);
 
 //api test
 app.use('/request-tester', express.static(path.join(__dirname, 'views/api-tester')));
+
+
 
 
 //catch 404 and forward to error handler

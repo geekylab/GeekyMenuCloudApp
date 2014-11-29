@@ -33,7 +33,6 @@ module.exports = function (app, passport, appEvent) {
             console.log("ERROR ERROR: " + e.message);
         });
 
-        res.send("Thanks");
     });
 
 
@@ -58,32 +57,42 @@ module.exports = function (app, passport, appEvent) {
                         });
                     }
                 });
-                //store.store_name = newStore.store_name;
-                //store.seat_count = newStore.seat_count;
-                //store.location = newStore.location;
-                //store.address2 = newStore.address2;
-                //store.address = newStore.address;
-                //store.city = newStore.city;
-                //store.state = newStore.state;
-                //store.zip_code = newStore.zip_code;
-                //store.country = newStore.country;
-                //store.tel = newStore.tel;
-                //store.desc = newStore.desc;
-                //store.created = newStore.created;
-                //store.tables = newStore.tables;
-                //store.opts = newStore.opts;
-                //store.images = newStore.images;
-                //store.seat_type = newStore.seat_type;
-                //store.opening_hour = newStore.opening_hour;
             });
         }
     });
+
+
+    app.post('/sync/category/:category_id?', digestAuth, function (req, res) {
+        var user = req.user;
+        console.log("category_id", req.params.category_id);
+        if (req.params.category_id) {
+            var newCateory = req.body.category;
+            console.log(newCateory);
+            globalSchema.Item.findOne({org_id: req.params.category_id, user: user._id}, function (err, cateory) {
+                if (!cateory) {
+                    cateory = new globalSchema.Category();
+                }
+                newCateory.user = req.user._id;
+                cateory.setByParams(newCateory, function (err) {
+                    if (err) {
+                        return res.status(400).json({status: false, message: err, store: newCateory});
+                    } else {
+                        cateory.save(function (err) {
+                            if (err) throw err;
+                            return res.json({status: true, message: 'category is updated', store: newCateory});
+                        });
+                    }
+                });
+            });
+        }
+    });
+
 
     app.post('/sync/item/:item_id?', digestAuth, function (req, res) {
         var user = req.user;
         if (req.params.item_id) {
             var newItem = req.body.item;
-            console.log(newItem);
+            // console.log("newItem",newItem);
             globalSchema.Item.findOne({org_id: req.params.item_id, user: user._id}, function (err, item) {
                 if (!item) {
                     item = new globalSchema.Item();
@@ -95,11 +104,13 @@ module.exports = function (app, passport, appEvent) {
                     } else {
                         item.save(function (err) {
                             if (err) throw err;
-                            return res.json({status: true, message: 'store is updated', store: item});
+                            return res.json({status: true, message: 'item is updated', store: item});
                         });
                     }
                 });
             });
+        } else {
+            return res.status(400).json({status: false, message: "Invalid parameters"});
         }
     });
 

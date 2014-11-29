@@ -12,6 +12,9 @@ angular.module('RequestTester')
             {
                 name: 'store'
             },
+                        {
+                name: 'category'
+            },
             {
                 name: 'item'
             },
@@ -66,6 +69,50 @@ angular.module('RequestTester')
                 });
         };
 
+    }).controller('CategoryCtrl', function ($scope, $http, Settings) {
+
+        $scope.api_host = Settings.api_host;
+        
+        $scope.langs = [
+            {code: 'us'},
+            {code: 'jp'},
+            {code: 'br'}
+        ];
+        
+
+
+        $scope.response = '';
+        $scope.responseString = '';
+        $scope.params = {
+            store_id: '547881eddc760d1200f02b7e',
+            lang: $scope.langs[0]
+        };
+
+        $scope.requestUrl = $scope.baseUrl = Settings.api_host + '/open-api/category';
+        $scope.baseUrl += '/:store_id[?l=:lang]';
+
+        $scope.$watch('params', function (n, o) {
+            var params_store = '';
+
+            if (n.store_id) {
+                params_store = '/' + n.store_id + '?l=' + n.lang.code;
+            }
+            $scope.requestUrl = Settings.api_host + '/open-api/category' + params_store;
+        }, true);
+
+        $scope.filters = {};
+
+        $scope.doRequest = function () {
+            console.log("doRequest",$scope.requestUrl);
+            $http.post($scope.requestUrl, $scope.filters)
+                .success(function (json) {
+                    $scope.response = json;
+                    $scope.responseString = JSON.stringify(json, null, '  ');
+                }).error(function (json) {
+                    $scope.responseString = JSON.stringify(json, null, '  ');
+                });
+        };
+
     }).controller('ItemCtrl', function ($scope, $http, Settings) {
 
         $scope.api_host = Settings.api_host;
@@ -78,7 +125,7 @@ angular.module('RequestTester')
         $scope.response = '';
         $scope.responseString = '';
         $scope.params = {
-            store_id: '546f423a739e081600df6eca',
+            store_id: '547881eddc760d1200f02b7e',
             item_id: ''
         };
         $scope.requestUrl = $scope.baseUrl = Settings.api_host + '/open-api/item';
@@ -102,7 +149,9 @@ angular.module('RequestTester')
             $scope.requestUrl = Settings.api_host + '/open-api/item' + params_store + params_item;
         }, true);
 
-        $scope.filters = {};
+        $scope.filters = {
+            category_id : '5478c935f29d4d51026a0fac'
+        };
 
         $scope.doRequest = function () {
             $http.post($scope.requestUrl, $scope.filters)
@@ -155,6 +204,5 @@ angular.module('RequestTester')
             //        $scope.response = JSON.stringify(json, null, '  ');
             //    });
         };
-
     })
 ;
