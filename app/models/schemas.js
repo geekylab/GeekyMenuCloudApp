@@ -213,8 +213,8 @@ var Item = new mongoose.Schema({
 
     'images': [Image],
     'categories': [{
-       type: mongoose.Schema.Types.ObjectId,
-       ref: 'Category'
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Category'
     }],
     created: {
         type: Date,
@@ -263,7 +263,7 @@ Item.methods.setByParams = function (params, callback) {
                 } else {
                     asyncCallback();
                 }
-            },function (asyncCallback) {
+            }, function (asyncCallback) {
                 if (params.categories) {
                     async.eachSeries(params.categories, function (category, next) {
                         // console.log("category in eachSeries", {org_id: category, user: params.user});
@@ -278,13 +278,13 @@ Item.methods.setByParams = function (params, callback) {
                                 next();
                             }
                         });
-                    },function (err) {
+                    }, function (err) {
                         asyncCallback(err);
                     })
                 } else {
                     asyncCallback();
                 }
-            },function (asyncCallback) {
+            }, function (asyncCallback) {
                 if (params.images && params.images.length > 0) {
                     async.eachSeries(params.images, function (img, next) {
                         if (img.image._id) {
@@ -307,15 +307,15 @@ Item.methods.setByParams = function (params, callback) {
                         self.images = params.images;
                         asyncCallback();
                     });
-                } else {
-                    asyncCallback();
-                }
+} else {
+    asyncCallback();
+}
 
-            }
-        ], function (err, results) {
-            callback(err);
-        });
-    }
+}
+], function (err, results) {
+    callback(err);
+});
+}
 };
 
 var ImageStorage = new mongoose.Schema({
@@ -374,7 +374,7 @@ var Category = new mongoose.Schema({
     store: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Store'
-    }],    
+    }],
     created: {
         type: Date,
         default: Date.now
@@ -390,7 +390,7 @@ Category.methods.setByParams = function (params, callback) {
         this.user = params.user;
 
     if (params.store)
-        this.store = params.store;    
+        this.store = params.store;
 
     if (params.name)
         this.name = params.name;
@@ -414,9 +414,6 @@ Category.methods.setByParams = function (params, callback) {
     }
 };
 
-
-
-
 // methods ======================
 // generating a hash
 User.methods.generateHash = function (password) {
@@ -432,8 +429,36 @@ User.methods.validPassword = function (password) {
     return bcrypt.compareSync(password, this.password);
 };
 
+var Customer = mongoose.Schema({
+    provider: String,
+    provider_id: {
+        type: String,
+        index: true
+    },
+    service_token: {
+        type: String,
+        index: true
+    },
+    image_url : String,
+    name: {
+        family_name: String,
+        given_name: String
+    },
+    display_name: {
+        type: String
+    },
+    emails: [String],
+    _raw: String
+});
+
+Customer.methods.generateHash = function (password) {
+    return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
+};
+
+
 exports.Store = db.model('Store', Store);
 exports.User = db.model('User', User);
 exports.Category = db.model('Category', Category);
 exports.Item = db.model('Item', Item);
 exports.ImageStorage = db.model('ImageStorage', ImageStorage);
+exports.Customer = db.model('Customer', Customer);

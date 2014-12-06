@@ -8,6 +8,8 @@ var authConfig = require('../config/auth.local.js');
 
 // load up the user model
 var User = require('../models/schemas').User;
+var Customer = require('../models/schemas').Customer;
+
 module.exports = function (passport) {
 
     // used to serialize the user for the session
@@ -124,17 +126,56 @@ module.exports = function (passport) {
     ));
 
 
-    passport.use('google-token',new GoogleTokenStrategy({
-        clientID: authConfig.googleAuth.clientID,
-        clientSecret: authConfig.googleAuth.clientSecret
-      },
-      function(accessToken, refreshToken, profile, done) {
-        console.log(profile);
-        return done(null, profile);
-        // User.findOrCreate({ googleId: profile.id }, function (err, user) {
-        //   return done(err, user);
-        // });
-      }
+    passport.use('google-token', new GoogleTokenStrategy({
+            clientID: authConfig.googleAuth.clientID,
+            clientSecret: authConfig.googleAuth.clientSecret
+        },
+        function (accessToken, refreshToken, profile, done) {
+            process.nextTick(function () {
+                if (profile && profile.id) {
+                    Customer.findOne({provider_id: profile.id}, function (err, customer) {
+                        if (err) {
+                            return done(err);
+                        }
+
+                        if (!customer) {
+                            customer = new Customer();
+                            customer.provider = "google";
+                            customer.provider_id = profile.id;
+                            if (profile._json.image && profile._json.image.url) {
+                                customer.image_url = profile._json.image.url;
+                            }
+
+                            if (profile._json.name) {
+                                customer.name = {};
+                                customer.name.family_name = profile._json.name.familyName;
+                                customer.name.given_name  = profile._json.name.givenName;
+                            }
+
+                            customer.display_name = profile._json.displayName;
+
+                            if (profile.emails && profile.emails.length > 0) {
+                                if(profile.emails[0].value) {
+                                    customer.emails = [profile.emails[0].value];
+                                }
+                            }
+
+                            customer._raw = profile._raw;
+                            customer.service_token = customer.generateHash(accessToken);
+                            customer.save(function (err) {
+                                if (err)
+                                    throw err;
+                                return done(null, customer);
+                            });
+                        }
+
+                        return done(null, customer);
+                    });
+                } else {
+                    return done(null, false);
+                }
+            });
+        }
     ));
 
 };
