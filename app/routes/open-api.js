@@ -74,7 +74,7 @@ app.post('/open-api/store/:store_id?', cors(), function (req, res) {
                         if (store.store_name[lang] != undefined){
                             store.store_name = store.store_name[lang];
                         } else {
-                            store.store_name = store.store_name["us"];                            
+                            store.store_name = store.store_name["us"];
                         }
                     }
 
@@ -82,7 +82,7 @@ app.post('/open-api/store/:store_id?', cors(), function (req, res) {
                         if (store.desc[lang] != undefined){
                             store.desc = store.desc[lang];
                         } else {
-                            store.desc = store.desc["us"];                            
+                            store.desc = store.desc["us"];
                         }
                     }
 
@@ -118,13 +118,13 @@ app.post('/open-api/store/:store_id?', cors(), function (req, res) {
                         if (stores[i].store_name[lang]){
                             stores[i].store_name = stores[i].store_name[lang];
                         } else {
-                            stores[i].store_name = stores[i].store_name["us"];                            
+                            stores[i].store_name = stores[i].store_name["us"];
                         }
 
                         if (stores[i].desc[lang]){
                             stores[i].desc = stores[i].desc[lang];
                         } else {
-                            stores[i].desc = stores[i].desc["us"];                            
+                            stores[i].desc = stores[i].desc["us"];
                         }
                     }
 
@@ -192,13 +192,13 @@ app.post('/open-api/store/:store_id?', cors(), function (req, res) {
                         if (items[i].name[lang]){
                             items[i].name = items[i].name[lang];
                         } else {
-                            items[i].name = items[i].name["us"];                            
+                            items[i].name = items[i].name["us"];
                         }
 
                         if (items[i].desc[lang]){
                             items[i].desc = items[i].desc[lang];
                         } else {
-                            items[i].desc = items[i].desc["us"];                            
+                            items[i].desc = items[i].desc["us"];
                         }
 
                         if (items[i].images && items[i].images.length > 0) {
@@ -262,11 +262,10 @@ app.post('/open-api/store/:store_id?', cors(), function (req, res) {
                     if (categories[i].name[lang]){
                         categories[i].name = categories[i].name[lang];
                     } else {
-                        categories[i].name = categories[i].name["us"];                            
+                        categories[i].name = categories[i].name["us"];
                     }
                 }
 
-                console.log(categories);
                 return res.json({
                     status: true,
                     data: categories
@@ -281,13 +280,23 @@ app.post('/open-api/store/:store_id?', cors(), function (req, res) {
      * image
      */
 
-     app.get('/open-api/image/:id', cors(), function (req, res, next) {
+    app.get('/open-api/image/:id', cors(), function (req, res, next) {
         var user = req.user;
         globalSchema.ImageStorage.findById(req.params.id, function (err, doc) {
             if (err) return next(err);
             res.contentType(doc.contentType);
             res.write(doc.data);
             res.end();
+        });
+    });
+
+
+    app.post('/open-api/table_token/:store_id', cors(), function (req, res) {
+        console.log(req.body.table_token);
+        console.log(req.body.service_token);
+        return res.json({
+            status: true,
+            data: {}
         });
     });
 
