@@ -5,6 +5,17 @@ var async = require('async');
 
 var db = mongoose.connect('mongodb://GEEKY_MONGO/geekyMenuCloud');
 
+var StoreTable = new mongoose.Schema({
+    table_number: {
+        type: String,
+        index: true
+    },
+    table_status: {
+        type: Number,
+        default: 0
+    }
+});
+
 var Store = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
@@ -69,6 +80,10 @@ var Store = new mongoose.Schema({
     'images': [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'ImageStorage'
+    }],
+    tables: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'StoreTable'
     }],
     'opts': [{
         type: String,
@@ -307,15 +322,15 @@ Item.methods.setByParams = function (params, callback) {
                         self.images = params.images;
                         asyncCallback();
                     });
-} else {
-    asyncCallback();
-}
+                } else {
+                    asyncCallback();
+                }
 
-}
-], function (err, results) {
-    callback(err);
-});
-}
+            }
+        ], function (err, results) {
+            callback(err);
+        });
+    }
 };
 
 var ImageStorage = new mongoose.Schema({
@@ -395,7 +410,6 @@ Category.methods.setByParams = function (params, callback) {
     if (params.name)
         this.name = params.name;
 
-
     if (params.store) {
         var self = this;
         exports.Store.findOne({org_id: params.store, user: params.user}, function (err, store) {
@@ -439,7 +453,7 @@ var Customer = mongoose.Schema({
         type: String,
         index: true
     },
-    image_url : String,
+    image_url: String,
     name: {
         family_name: String,
         given_name: String
@@ -455,6 +469,46 @@ Customer.methods.generateHash = function (password) {
     return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
 };
 
+var OrderItem = mongoose.Schema({
+    name: {
+        type: mongoose.Schema.Types.Mixed,
+        index: true,
+        required: true
+    },
+    price: {
+        type: Number,
+        default: 0,
+        index: true
+    },
+    created: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+var Order = mongoose.Schema({
+    table: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'StoreTable'
+    },
+    store: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Store'
+    },
+    customer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Customer'
+    },
+    table_token: {
+        type: Number,
+        index: true
+    },
+    items: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'OrderItem'
+    }]
+});
+
 
 exports.Store = db.model('Store', Store);
 exports.User = db.model('User', User);
@@ -462,3 +516,6 @@ exports.Category = db.model('Category', Category);
 exports.Item = db.model('Item', Item);
 exports.ImageStorage = db.model('ImageStorage', ImageStorage);
 exports.Customer = db.model('Customer', Customer);
+exports.StoreTable = db.model('StoreTable', StoreTable);
+exports.OrderItem = db.model('OrderItem', OrderItem);
+exports.Order = db.model('Order', Order);

@@ -88,19 +88,19 @@ app.set('views', path.join(__dirname, 'GeekyOSEasyControl/app'));
  networks: ['*'],
  fallbacks: []
  }));
-*/
+ */
 app.use(methodOverride());
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({extended: false, limit: '50mb'}));
 app.use(cookieParser());
 
 app.use(expressSession({
-    secret: authConfig.secret_key,
-    resave: true,
-    saveUninitialized: true,
+        secret: authConfig.secret_key,
+        resave: true,
+        saveUninitialized: true,
 //        cookie: {},
-store: myMongoStore
-})
+        store: myMongoStore
+    })
 );
 app.use(passport.initialize());
 app.use(passport.session());
@@ -109,7 +109,6 @@ app.use(flash());
 // socket io
 var User = require('./models/schemas').User;
 io.set('authorization', function (handshakeData, callback) {
-    console.log(handshakeData._query.hash);
     if (handshakeData._query && handshakeData._query.hash) {
         var user_hash = handshakeData._query.hash;
         User.findOne({serverHash: user_hash}, function (err, user) {
@@ -125,21 +124,22 @@ io.set('authorization', function (handshakeData, callback) {
     }
 });
 
+var connectedUsers = {};
 io.sockets.on('connection', function (socket) {
     if (socket.request.user) {
         if (socket.request.user) {
-            app.on('sync:all:finish:' + socket.request.user.serverHash, function (data) {
-                console.log('emit socket');
-                socket.emit('notice', data);
-            });
+            connectedUsers[socket.request.user.serverHash] = socket;
         }
 
         socket.on('disconnect', function () {
             if (socket.request.user) {
-                var eventName = 'sendNotice:' + socket.request.user._id;
-                app.removeListener(eventName, function () {
-                });
-                console.log('disconnect11: ', socket.request.user.username);
+                if (connectedUsers[socket.request.user.serverHash]) {
+                    connectedUsers[socket.request.user.serverHash] = null;
+                    delete connectedUsers[socket.request.user.serverHash];
+                } else {
+                    console.log('no object');
+                }
+                console.log('disconnect: ', socket.request.user.username);
             }
         });
 
@@ -152,7 +152,7 @@ app.use('/app', express.static(path.join(__dirname, '/GeekyOSEasyControl/app')))
 require('./routes/app-core')(app, passport, isLoggedIn);
 
 //open api
-require('./routes/open-api')(app, passport, isLoggedIn, cors);
+require('./routes/open-api')(app, passport, isLoggedIn, cors, connectedUsers);
 //api test
 app.use('/assets', express.static(path.join(__dirname, 'views/assets')));
 
@@ -161,8 +161,6 @@ require('./routes/store-sync')(app, passport, appEvent, isLoggedIn);
 
 //api test
 app.use('/request-tester', express.static(path.join(__dirname, 'views/api-tester')));
-
-
 
 
 //catch 404 and forward to error handler
