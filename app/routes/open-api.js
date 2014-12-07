@@ -345,12 +345,15 @@ module.exports = function (app, passport, isLoggedIn, cors, connectedUsers) {
                     var sendData = {
                         table_token: req.body.table_token
                     };
+
                     if (results[1]) {
                         sendData.customer = results[1];
                     }
+
                     connectedUsers[results[0]].emit("check_table_hash", sendData, function (data) {
                         return responseJson(true, {}, "OK");
                     });
+                    
                 } else {
                     return responseJson(false, {}, "server is off", 400);
                 }
