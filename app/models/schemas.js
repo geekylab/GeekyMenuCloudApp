@@ -131,7 +131,6 @@ Store.methods.setByParams = function (params, callback) {
         this.address = params.address;
 
     if (params.location && params.location.length == 2) {
-        console.log(params.location);
         this.location = params.location;
     }
 

@@ -292,8 +292,6 @@ module.exports = function (app, passport, isLoggedIn, cors, connectedUsers) {
 
 
     app.post('/open-api/table_token/:store_id', cors(), function (req, res) {
-        console.log(req.body.table_token);
-        console.log(req.body.service_token);
         var responseJson = function (status, json, message, code) {
             if (!code) {
                 if (status)
@@ -333,14 +331,15 @@ module.exports = function (app, passport, isLoggedIn, cors, connectedUsers) {
                             name: customer.name
                         });
                     } else {
-                        asyncCallback(null);
+                        asyncCallback("user not found");
                     }
                 });
         }], function (err, results) {
             if (err) {
                 return responseJson(false, {}, err, 400);
             }
-            if (results[0]) {
+
+            if (results[0] && req.body.table_token && req.body.table_id) {
                 if (connectedUsers[results[0]]) {
                     var sendData = {
                         table_token: req.body.table_token
@@ -351,9 +350,9 @@ module.exports = function (app, passport, isLoggedIn, cors, connectedUsers) {
                     }
 
                     connectedUsers[results[0]].emit("check_table_hash", sendData, function (data) {
-                        return responseJson(true, {}, "OK");
+                        return responseJson(true, data, "OK");
                     });
-                    
+
                 } else {
                     return responseJson(false, {}, "server is off", 400);
                 }
