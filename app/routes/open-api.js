@@ -342,7 +342,8 @@ module.exports = function (app, passport, isLoggedIn, cors, connectedUsers) {
             if (results[0] && req.body.table_token && req.body.table_id) {
                 if (connectedUsers[results[0]]) {
                     var sendData = {
-                        table_token: req.body.table_token
+                        table_token: req.body.table_token,
+                        table_id: req.body.table_id
                     };
 
                     if (results[1]) {
@@ -350,6 +351,7 @@ module.exports = function (app, passport, isLoggedIn, cors, connectedUsers) {
                     }
 
                     connectedUsers[results[0]].emit("check_table_hash", sendData, function (data) {
+                        console.log(data);
                         return responseJson(true, data, "OK");
                     });
 
