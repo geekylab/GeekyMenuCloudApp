@@ -70,7 +70,6 @@ module.exports = function (app, passport, isLoggedIn, cors, connectedUsers) {
                         message: err
                     });
                 } else {
-
                     if (store.store_name) {
                         if (store.store_name[lang] != undefined) {
                             store.store_name = store.store_name[lang];
@@ -326,9 +325,11 @@ module.exports = function (app, passport, isLoggedIn, cors, connectedUsers) {
                         return asyncCallback("internal error");
 
                     if (customer) {
+                        console.log(customer);
                         asyncCallback(null, {
                             id: customer._id,
-                            name: customer.name
+                            name: customer.name,
+                            image_url: customer.image_url
                         });
                     } else {
                         asyncCallback("user not found");
@@ -343,7 +344,8 @@ module.exports = function (app, passport, isLoggedIn, cors, connectedUsers) {
                 if (connectedUsers[results[0]]) {
                     var sendData = {
                         table_token: req.body.table_token,
-                        table_id: req.body.table_id
+                        table_id: req.body.table_id,
+                        send_time: Date.now()
                     };
 
                     if (results[1]) {
