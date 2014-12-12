@@ -1,5 +1,9 @@
+var config = require('../config/auth.local.js');
 var globalSchema = require('../models/schemas');
 var async = require('async');
+var AWS = require('aws-sdk');
+AWS.config.update(config.aws);
+
 
 module.exports = function (app, passport, isLoggedIn, cors, connectedUsers) {
     var version = '0.0.1';
@@ -289,6 +293,109 @@ module.exports = function (app, passport, isLoggedIn, cors, connectedUsers) {
         });
     });
 
+    app.put('/open-api/regid', cors(), function (req, res, next) {
+        passport.authenticate('service-token-hash', function (err, user, info) {
+
+            // var responseJson = function (status, json, message, code) {
+            //     if (!code) {
+            //         if (status)
+            //             code = 200;
+            //         else
+            //             code = 400;
+            //     }
+
+            //     return res.status(code).json({
+            //         status: status,
+            //         data: json,
+            //         code: code,
+            //         message: message
+            //     });
+            // };
+            // console.log("/open-api/regid")
+
+            // return responseJson(true, {});
+
+            if (err) {
+                console.log("/open-api/regid::error", err);
+                return next(err);
+            }
+
+            if (!user) {
+                return res.json({
+                    status: false,
+                    message: 'user is not found'
+                });
+            }
+
+            if (!req.body.regid) {
+                return res.json({
+                    status: false,
+                    message: 'no regid'
+                });
+            }
+
+            var sns    = new AWS.SNS();
+            var ARN    = config.awsSnsApp.ARN_GCM;
+            var regid  = req.body.regid;
+            var userId = "" + user._id;
+            var sns    = new AWS.SNS();
+
+            //save in AWS SNS and Update customer
+            async.waterfall([
+                    function (asyncCallback) { //delete aws ARN if diferent
+                        //TODO: delete ARN
+                        asyncCallback(null);
+                    },
+                    function (asyncCallback) { //save in aws sns
+                        var params = {
+                            PlatformApplicationArn: ARN, /* required */
+                            Token: regid, /* required */
+                            CustomUserData: userId
+                        };
+
+                        sns.createPlatformEndpoint(params, function(err, data) {
+                            if (err) {
+                                console.log(err, err.stack); // an error occurred
+                                asyncCallback('cant create EndpointArn');
+                            } else {
+                                console.log("save in aws sns", "OK");
+                                asyncCallback(null, data);
+                            }
+                        });
+
+                    }, function (data, asyncCallback) { //update customer push_info
+                        if (data) {
+                            user.push_info = {
+                                endpoint_arn: data.EndpointArn,
+                                regid: req.body.regid
+                            }
+                            user.save(function(err, user){
+                                if (err) {
+                                    console.log(err);
+                                    asyncCallback('cant update user info');
+                                } else {
+                                    console.log("update customer push_info", "OK");
+                                    asyncCallback(null, user);
+                                }
+                            });
+                        } else {
+                            asyncCallback('invalid parameters');
+                        }
+                    }
+                ],
+                function(err, user) {
+
+                    if (err) {
+                        console.log("final response", "NG", err);
+                        return res.status(400).json({status: false, message: err});
+                    } else {
+                        console.log("final response", "OK");
+                        return res.json({status: true, message: 'OK'});
+                    }
+                }
+            );
+        })(req, res, next);
+    });
 
     app.post('/open-api/table_token/:store_id', cors(), function (req, res) {
         var responseJson = function (status, json, message, code) {

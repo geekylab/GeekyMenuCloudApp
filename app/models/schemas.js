@@ -460,6 +460,14 @@ var Customer = mongoose.Schema({
     display_name: {
         type: String
     },
+    push_info: {
+        endpoint_arn: {
+            type: String
+        },
+        regid: {
+            type: String
+        }
+    },
     emails: [String],
     _raw: String
 });

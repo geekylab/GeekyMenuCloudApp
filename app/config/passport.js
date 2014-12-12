@@ -3,6 +3,7 @@
 // load all the things we need
 var LocalStrategy = require('passport-local').Strategy;
 var GoogleTokenStrategy = require('passport-google-token').Strategy;
+var HashStrategy = require('passport-hash').Strategy;
 var DigestStrategy = require('passport-http').BasicStrategy;
 var authConfig = require('../config/auth.local.js');
 
@@ -177,6 +178,27 @@ module.exports = function (passport) {
             });
         }
     ));
+
+
+    passport.use('service-token-hash', new HashStrategy({
+            headerField: "x-auth-hash"
+        },
+        function(hash, done) {
+            console.log("johna");
+            process.nextTick(function () {
+                console.log("service-token-hash", hash);
+                Customer.findOne({ service_token: hash }, function (err, user) {
+                    if (err) { return done(err); }
+                    if (!user) { return done(null, false); }
+                    // if (!user.isUnconfirmed()) {
+                    //     return done(null, false);
+                    // }
+                    return done(null, user);
+                });
+        });
+      }
+    ));
+
 
 };
 
