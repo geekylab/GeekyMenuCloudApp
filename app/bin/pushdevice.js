@@ -8,7 +8,7 @@ var sns = new AWS.SNS();
 var params = {
   Message: 'Test for you', /* required */
   // MessageAttributes: {
-  //   someKey: {
+  //   someKey: {mail
   //     DataType: 'STRING_VALUE', /* required */
   //     BinaryValue: new Buffer('...') || 'STRING_VALUE',
   //     StringValue: 'STRING_VALUE'
