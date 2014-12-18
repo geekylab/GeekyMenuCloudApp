@@ -17,7 +17,7 @@ var params = {
   // },
 //  MessageStructure: 'STRING_VALUE',
   Subject: 'test',
-  TargetArn: ARN + '/',
+  TargetArn: ARN + '/'
 };
 
 sns.publish(params, function(err, data) {
