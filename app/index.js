@@ -112,6 +112,7 @@ var User = require('./models/schemas').User;
 var Store = require('./models/schemas').Store;
 var Customer = require('./models/schemas').Customer;
 io.set('authorization', function (handshakeData, callback) {
+    console.log(handshakeData._query);
     if (handshakeData._query && handshakeData._query.hash) {
         var user_hash = handshakeData._query.hash;
         async.waterfall([
@@ -141,8 +142,7 @@ io.set('authorization', function (handshakeData, callback) {
 
     } else if (handshakeData._query &&
         handshakeData._query.service_token &&
-        handshakeData._query.store_id &&
-        handshakeData._query.order_token) {
+        handshakeData._query.store_id) {
 
         async.waterfall([
             function (asyncCallback) { //search user
@@ -173,17 +173,23 @@ io.set('authorization', function (handshakeData, callback) {
                 });
             }
         ],function(err, user){
+            if (err) {
+                console.log("customer error", err);
+                return callback(err);
+            }
             handshakeData.customer = user;
             callback(null, true);
         });
 
 
     } else {
-        callback('hash not found', false);
+        console.log("parameters errors");
+        callback('parameters errors', false);
     }
 });
 
 var connectedUsers = {};
+app.sockets = [];
 io.sockets.on('connection', function (socket) {
     console.log("connection");
     if (socket.request.user) {
@@ -194,8 +200,10 @@ io.sockets.on('connection', function (socket) {
                 console.log("store join in", socket.request.user.store._id);
             }
     } else if (socket.request.customer) {
+        console.log("customer", socket.request.customer);
         if (socket.request.customer.store_id) {
             socket.join(socket.request.customer.store_id);
+            app.sockets[socket.request.customer._id] = socket.id;
             console.log("customer join in", socket.request.customer.store_id);
         }
     } else {

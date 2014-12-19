@@ -133,7 +133,6 @@ module.exports = function (passport) {
         },
         function (accessToken, refreshToken, profile, done) {
             process.nextTick(function () {
-                console.log("profile", profile);
                 if (profile && profile.id) {
                     Customer.findOne({provider_id: profile.id}, function (err, customer) {
                         if (err) {
@@ -148,7 +147,6 @@ module.exports = function (passport) {
 
 
                         if (profile._json.picture) {
-                            console.log("picture", profile._json.picture);
                             customer.image_url = profile._json.picture;
                         }
 

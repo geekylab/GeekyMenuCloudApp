@@ -506,15 +506,46 @@ var Order = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Customer'
     },
-    table_token: {
-        type: Number,
-        index: true
-    },
     items: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'OrderItem'
     }]
 });
+
+var CheckInRequest = new mongoose.Schema({
+    table: {
+        type: String
+    },
+    store: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Stores'
+    },
+    customer:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Customer'
+    },
+    status: {
+        type: Number
+    },
+    request_token: {
+        type: String,
+        index: true
+    },
+    request_count: {
+        type: Number,
+        default: 1
+    },
+    created: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+CheckInRequest.methods.generateRequestToken = function () {
+    var current_date = (new Date()).valueOf().toString();
+    var random = Math.random().toString();
+    return crypto.createHash('sha1').update(current_date + random).digest('hex');
+};
 
 
 exports.Store = db.model('Store', Store);
@@ -526,3 +557,4 @@ exports.Customer = db.model('Customer', Customer);
 exports.StoreTable = db.model('StoreTable', StoreTable);
 exports.OrderItem = db.model('OrderItem', OrderItem);
 exports.Order = db.model('Order', Order);
+exports.CheckInRequest = db.model('CheckInRequest', CheckInRequest);

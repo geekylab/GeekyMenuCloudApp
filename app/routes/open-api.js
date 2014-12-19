@@ -424,68 +424,135 @@ app.post('/open-api/table_token/:store_id', cors(), function (req, res) {
         });
     };
 
-    async.series([function (asyncCallback) {
+    async.waterfall([function (asyncCallback) {
         globalSchema.Store.findById(req.params.store_id)
         .populate('user')
         .exec(function (err, store) {
             if (store) {
-                asyncCallback(null, store.user.serverHash)
+                asyncCallback(null, store)
             } else {
                 asyncCallback("store not found")
             }
         });
 
-    }, function (asyncCallback) {
+    }, function (store, asyncCallback) {
         globalSchema.Customer
         .findOne({service_token: req.body.service_token}, function (err, customer) {
             if (err)
                 return asyncCallback("internal error");
 
             if (customer) {
-                console.log(customer);
-                asyncCallback(null, {
-                    id: customer._id,
-                    name: customer.name,
-                    image_url: customer.image_url
-                });
+                asyncCallback(null, store, customer);
             } else {
                 asyncCallback("user not found");
             }
         });
-    }], function (err, results) {
-        if (err) {
-            console.log("err1" , err);
-            return responseJson(false, {}, err, 400);
-        }
+    }, function (store, customer, asyncCallback) { //generate request token and save
+        globalSchema.CheckInRequest.findOne({customer: customer._id, store: store._id, table: req.body.table_id})
+        .exec(function(err, checkInRequest) {
 
-        if (results[0] && req.body.table_id) {
-            if (connectedUsers[results[0]]) {
-                var sendData = {
-                    table_id: req.body.table_id,
-                    send_time: Date.now()
-                };
-
-                if (results[1]) {
-                    sendData.customer = results[1];
-                }
-
-                connectedUsers[results[0]].emit("request_check_in", sendData, function (data) {
-                    if (data.status) {
-                        return responseJson(true, data, "OK");
-                    } else {
-                        return responseJson(false, data, data.err);
-                    }
-                });
-
-            } else {
-                console.log("err2" , "server is off");
-                return responseJson(false, {}, "server is off", 400);
+            if (err) {
+                return asyncCallback(err);
             }
-        } else {
-            console.log("err3" , "invalid parameters");
-            return responseJson(false, {}, "invalid parameters", 400);
-        }
+
+            console.log(customer);
+            if (!checkInRequest) {
+                console.log("new checkInRequest");
+                checkInRequest               = new globalSchema.CheckInRequest();
+                checkInRequest.table         = req.body.table_id;
+                checkInRequest.store         = store._id;
+                checkInRequest.customer      = customer._id;
+                checkInRequest.request_token = checkInRequest.generateRequestToken();
+            } else {
+                console.log("has checkInRequest");
+                checkInRequest.request_count++;
+            }
+
+            checkInRequest.save(function (err, checkInRequest) {
+                if (err)
+                    return asyncCallback(err);
+                asyncCallback(null, store, customer, checkInRequest);
+            });
+
+        });
+    }], function (err, store, customer, checkInRequest) {
+            if (err) {
+                console.log("err1" , err);
+                return responseJson(false, {}, err, 400);
+            }
+
+            var serverHash = store.user.serverHash;
+            if (serverHash && req.body.table_id) {
+                if (connectedUsers[serverHash]) {
+                    var sendData = {
+                        table_id: req.body.table_id,
+                        send_time: Date.now()
+                    };
+
+                    if (customer) {
+                        sendData.customer = {
+                            id: customer._id,
+                            name: customer.name,
+                            image_url: customer.image_url
+                        };
+                    }
+
+                    if (checkInRequest) {
+                        sendData.checkInRequest = checkInRequest;
+                    }
+
+                    connectedUsers[serverHash].emit("request_check_in", sendData, function (data) {
+                        if (data.status) {
+                            return responseJson(true, data, "OK");
+                        } else {
+                            return responseJson(false, data, data.err);
+                        }
+                    });
+
+                } else {
+                    console.log("err2" , "server is off");
+                    return responseJson(false, {}, "server is off", 400);
+                }
+            } else {
+                console.log("err3" , "invalid parameters");
+                return responseJson(false, {}, "invalid parameters", 400);
+            }
+        });
     });
-});
+
+
+    app.put('/open-api/request/:id', cors(), function (req, res) {
+
+        if (!req.body.data)
+            return res.json({status:false, msg: "invalid parameters"});
+
+        globalSchema.CheckInRequest.findById(req.params.id, function(err, checkInRequest) {
+            if (err)
+                return res.status(400).json(err);
+            var reqCheckInStatus = req.body.data.status;
+            var order = null;
+            if (req.body.data.order) {
+                order = req.body.data.order;
+            }
+
+            var io = app.get('io');
+            var sockId = app.sockets[checkInRequest.customer];
+            var emitForUser = false;
+            if (sockId) {
+                var socket;
+                if ((socket = io.sockets.connected[sockId])) {
+                    socket.emit("receive_check_in", {status: reqCheckInStatus, order: order});
+                    emitForUser = true;
+                }
+            }
+
+            if (reqCheckInStatus === 0 && emitForUser) {
+                checkInRequest.remove();
+            }
+
+
+            res.json({status:true, emitForUser: emitForUser});
+        });
+    });
 
 };
