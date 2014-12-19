@@ -144,7 +144,7 @@ io.set('authorization', function (handshakeData, callback) {
     } else if (handshakeData._query &&
         handshakeData._query.service_token &&
         handshakeData._query.store_id &&
-        handshakeData._query.table_token) {
+        handshakeData._query.order_token) {
 
         async.waterfall([
             function (asyncCallback) { //search user

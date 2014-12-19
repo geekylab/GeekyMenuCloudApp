@@ -408,6 +408,7 @@ app.post('/open-api/category/:store_id', cors(), function (req, res) {
 });
 
 app.post('/open-api/table_token/:store_id', cors(), function (req, res) {
+    console.log("/open-api/table_token/:store_id", req.body);
     var responseJson = function (status, json, message, code) {
         if (!code) {
             if (status)
@@ -454,13 +455,13 @@ app.post('/open-api/table_token/:store_id', cors(), function (req, res) {
         });
     }], function (err, results) {
         if (err) {
+            console.log("err1" , err);
             return responseJson(false, {}, err, 400);
         }
 
-        if (results[0] && req.body.table_token && req.body.table_id) {
+        if (results[0] && req.body.table_id) {
             if (connectedUsers[results[0]]) {
                 var sendData = {
-                    table_token: req.body.table_token,
                     table_id: req.body.table_id,
                     send_time: Date.now()
                 };
@@ -475,9 +476,11 @@ app.post('/open-api/table_token/:store_id', cors(), function (req, res) {
                 });
 
             } else {
+                console.log("err2" , "server is off");
                 return responseJson(false, {}, "server is off", 400);
             }
         } else {
+            console.log("err3" , "invalid parameters");
             return responseJson(false, {}, "invalid parameters", 400);
         }
     });
