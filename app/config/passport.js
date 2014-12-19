@@ -133,6 +133,7 @@ module.exports = function (passport) {
         },
         function (accessToken, refreshToken, profile, done) {
             process.nextTick(function () {
+                console.log("profile", profile);
                 if (profile && profile.id) {
                     Customer.findOne({provider_id: profile.id}, function (err, customer) {
                         if (err) {
@@ -143,32 +144,36 @@ module.exports = function (passport) {
                             customer = new Customer();
                             customer.provider = "google";
                             customer.provider_id = profile.id;
-                            if (profile._json.image && profile._json.image.url) {
-                                customer.image_url = profile._json.image.url;
-                            }
-
-                            if (profile._json.name) {
-                                customer.name = {};
-                                customer.name.family_name = profile._json.name.familyName;
-                                customer.name.given_name  = profile._json.name.givenName;
-                            }
-
-                            customer.display_name = profile._json.displayName;
-
-                            if (profile.emails && profile.emails.length > 0) {
-                                if(profile.emails[0].value) {
-                                    customer.emails = [profile.emails[0].value];
-                                }
-                            }
-
-                            customer._raw = profile._raw;
-                            customer.service_token = customer.generateHash(accessToken);
-                            customer.save(function (err) {
-                                if (err)
-                                    throw err;
-                                return done(null, customer);
-                            });
                         }
+
+
+                        if (profile._json.picture) {
+                            console.log("picture", profile._json.picture);
+                            customer.image_url = profile._json.picture;
+                        }
+
+                        customer.display_name = profile.displayName;
+
+                        if (profile.name) {
+                            customer.name = {};
+                            customer.name.family_name = profile.name.familyName;
+                            customer.name.given_name  = profile.name.givenName;
+                        }
+
+                        customer.emails = [];
+                        if (profile.emails && profile.emails.length > 0) {
+                            for (var i = 0; i > profile.emails.length; i++) {
+                                customer.emails.push(profile.emails[i].value);
+                            }
+                        }
+
+                        customer._raw = profile._raw;
+                        customer.service_token = customer.generateHash(accessToken);
+                        customer.save(function (err) {
+                            if (err)
+                                throw err;
+                            return done(null, customer);
+                        });
 
                         return done(null, customer);
                     });

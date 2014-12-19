@@ -24,7 +24,7 @@
     "request": "~2.49.0",
     "aws-sdk": "~2.1.0",
     "passport-hash": "git+https://github.com/johna1203/passport-hash.git",
-    "passport-google-token": "git+https://github.com/geekylab/passport-google-token.git"
+    "passport-google-token": "~0.1.1"
   },
   "devDependencies": {},
   "engines": {

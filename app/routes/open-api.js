@@ -408,7 +408,6 @@ app.post('/open-api/category/:store_id', cors(), function (req, res) {
 });
 
 app.post('/open-api/table_token/:store_id', cors(), function (req, res) {
-    console.log("/open-api/table_token/:store_id", req.body);
     var responseJson = function (status, json, message, code) {
         if (!code) {
             if (status)
@@ -470,9 +469,12 @@ app.post('/open-api/table_token/:store_id', cors(), function (req, res) {
                     sendData.customer = results[1];
                 }
 
-                connectedUsers[results[0]].emit("check_table_hash", sendData, function (data) {
-                    console.log(data);
-                    return responseJson(true, data, "OK");
+                connectedUsers[results[0]].emit("request_check_in", sendData, function (data) {
+                    if (data.status) {
+                        return responseJson(true, data, "OK");
+                    } else {
+                        return responseJson(false, data, data.err);
+                    }
                 });
 
             } else {

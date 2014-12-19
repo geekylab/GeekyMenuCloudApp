@@ -71,7 +71,8 @@ module.exports = function (app, passport) {
     app.post('/auth/google-token', passport.authenticate('google-token'), function (req, res, next) {
         var user = req.user;
         return res.json({
-            status: true, message: 'OK',
+            status: true,
+            message: 'OK',
             profile: user
         });
     });

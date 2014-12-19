@@ -112,8 +112,6 @@ var User = require('./models/schemas').User;
 var Store = require('./models/schemas').Store;
 var Customer = require('./models/schemas').Customer;
 io.set('authorization', function (handshakeData, callback) {
-    console.log("authorization");
-    console.log(handshakeData._query);
     if (handshakeData._query && handshakeData._query.hash) {
         var user_hash = handshakeData._query.hash;
         async.waterfall([
@@ -160,7 +158,6 @@ io.set('authorization', function (handshakeData, callback) {
             }, function (user, asyncCallback) { //find user store
                 var store_id = handshakeData._query.store_id;
                 Store.findById(store_id,function(err, myStore) {
-
                     if (err) {
                         return asyncCallback(err);
                     }
@@ -193,10 +190,10 @@ io.sockets.on('connection', function (socket) {
             connectedUsers[socket.request.user.serverHash] = socket;
             if (socket.request.user.store) {
                 socket.join(socket.request.user.store._id);
+                socket.join(socket.request.user.serverHash);
                 console.log("store join in", socket.request.user.store._id);
             }
     } else if (socket.request.customer) {
-        console.log("johna");
         if (socket.request.customer.store_id) {
             socket.join(socket.request.customer.store_id);
             console.log("customer join in", socket.request.customer.store_id);
@@ -214,7 +211,6 @@ io.sockets.on('connection', function (socket) {
             } else {
                 console.log('no object');
             }
-            console.log('disconnect: ', socket.request.user.username);
         }
     });
 
