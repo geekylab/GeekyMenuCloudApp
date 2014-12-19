@@ -424,6 +424,8 @@ app.post('/open-api/table_token/:store_id', cors(), function (req, res) {
         });
     };
 
+    console.log("/open-api/table_token/:store_id", req);
+
     async.waterfall([function (asyncCallback) {
         globalSchema.Store.findById(req.params.store_id)
         .populate('user')
