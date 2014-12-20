@@ -424,8 +424,6 @@ app.post('/open-api/table_token/:store_id', cors(), function (req, res) {
         });
     };
 
-    console.log("/open-api/table_token/:store_id", req);
-
     async.waterfall([function (asyncCallback) {
         globalSchema.Store.findById(req.params.store_id)
         .populate('user')
@@ -516,7 +514,7 @@ app.post('/open-api/table_token/:store_id', cors(), function (req, res) {
                     return responseJson(false, {}, "server is off", 400);
                 }
             } else {
-                console.log("err3" , "invalid parameters");
+                console.log("err3" , "invalid parameters", serverHash, req.body.table_id);
                 return responseJson(false, {}, "invalid parameters", 400);
             }
         });
@@ -543,7 +541,7 @@ app.post('/open-api/table_token/:store_id', cors(), function (req, res) {
             if (sockId) {
                 var socket;
                 if ((socket = io.sockets.connected[sockId])) {
-                    socket.emit("receive_check_in", {status: reqCheckInStatus, order: order});
+                    socket.emit("receive_check_in", {status: true, reqCheckInStatus: reqCheckInStatus, order: order});
                     emitForUser = true;
                 }
             }

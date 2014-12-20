@@ -194,6 +194,7 @@ io.sockets.on('connection', function (socket) {
     console.log("connection");
     if (socket.request.user) {
             connectedUsers[socket.request.user.serverHash] = socket;
+            app.sockets[socket.request.user.serverHash] = socket.id;
             if (socket.request.user.store) {
                 socket.join(socket.request.user.store._id);
                 socket.join(socket.request.user.serverHash);
@@ -213,9 +214,16 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('disconnect', function () {
         if (socket.request.user) {
-            if (connectedUsers[socket.request.user.serverHash]) {
-                connectedUsers[socket.request.user.serverHash] = null;
-                delete connectedUsers[socket.request.user.serverHash];
+            if (app.sockets[socket.request.user.serverHash]) {
+                app.sockets[socket.request.user.serverHash] = null;
+                delete app.sockets[socket.request.user.serverHash];
+            } else {
+                console.log('no object');
+            }
+        } else if (socket.request.customer) {
+            if (app.sockets[socket.request.customer._id]) {
+                app.sockets[socket.request.customer._id] = null;
+                delete app.sockets[socket.request.customer._id];
             } else {
                 console.log('no object');
             }
